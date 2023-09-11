@@ -1,0 +1,18 @@
+// Elmアプリケーションを開始します
+var app = Elm.Main.init({
+    node: document.getElementById('myapp')
+});
+
+// WebSocketの通信を確立します
+var socket = new WebSocket('wss://echo.websocket.org');
+
+// `sendMessage`というポートにコマンドが送られてきたとき、
+// 受け取ったメッセージをWebSocketに渡します
+app.ports.sendMessage.subscribe(function(message) {
+    socket.send(message);
+});
+
+socket.addEventListener("message", function(event) {
+    app.ports.messageReceiver.send(event.data);
+});
+
