@@ -1,0 +1,51 @@
+module TestAnim exposing (..)
+
+import Html exposing (Html)
+import Simple.Animation as Animation exposing (Animation)
+import Simple.Animation.Animated as Animated
+import Simple.Animation.Property as P
+import Svg exposing (Svg)
+import Svg.Attributes exposing (..)
+
+
+main : Html msg
+main =
+    Svg.svg [ viewBox "0 0 100 200", width "100px" ]
+        [ animatedG hover [] [ redSquare ]
+        ]
+
+
+redSquare : Svg msg
+redSquare =
+    Svg.rect
+        [ width "50"
+        , height "50"
+        , fill "red"
+        ]
+        []
+
+
+hover : Animation
+hover =
+    Animation.steps
+        { startAt = [ P.y 0 ]
+        , options = [ Animation.loop, Animation.easeInOutQuad ]
+        }
+        [ Animation.step 500 [ P.y 20 ]
+        , Animation.step 650 [ P.y 0 ]
+        ]
+
+
+
+-- Svg Animated Helpers
+
+
+animatedG : Animation -> List (Svg.Attribute msg) -> List (Svg msg) -> Svg msg
+animatedG =
+    animatedSvg Svg.g
+
+
+animatedSvg =
+    Animated.svg
+        { class = Svg.Attributes.class
+        }

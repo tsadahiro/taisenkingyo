@@ -5246,7 +5246,7 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (flags) {
 	return _Utils_Tuple2(
-		{host: false, id: $elm$core$Maybe$Nothing, kingyos: _List_Nil, moving: false, name: '', players: _List_Nil, points: 0, room: '', x: 400, y: 400},
+		{host: false, id: $elm$core$Maybe$Nothing, kingyos: _List_Nil, moving: false, name: '', players: _List_Nil, points: 0, room: '', tsukamaeta: _List_Nil, x: 400, y: 400},
 		$elm$core$Platform$Cmd$none);
 };
 var $author$project$Types$IdDefined = function (a) {
@@ -5811,21 +5811,74 @@ var $author$project$Main$moveInfo = _Platform_incomingPort(
 				function (x) {
 					return A2(
 						$elm$json$Json$Decode$andThen,
-						function (points) {
+						function (tsukamaeta) {
 							return A2(
 								$elm$json$Json$Decode$andThen,
-								function (name) {
+								function (points) {
 									return A2(
 										$elm$json$Json$Decode$andThen,
-										function (id) {
-											return $elm$json$Json$Decode$succeed(
-												{id: id, name: name, points: points, x: x, y: y});
+										function (name) {
+											return A2(
+												$elm$json$Json$Decode$andThen,
+												function (id) {
+													return $elm$json$Json$Decode$succeed(
+														{id: id, name: name, points: points, tsukamaeta: tsukamaeta, x: x, y: y});
+												},
+												A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string));
 										},
-										A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string));
+										A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string));
 								},
-								A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string));
+								A2($elm$json$Json$Decode$field, 'points', $elm$json$Json$Decode$int));
 						},
-						A2($elm$json$Json$Decode$field, 'points', $elm$json$Json$Decode$int));
+						A2(
+							$elm$json$Json$Decode$field,
+							'tsukamaeta',
+							$elm$json$Json$Decode$list(
+								A2(
+									$elm$json$Json$Decode$andThen,
+									function (v) {
+										return A2(
+											$elm$json$Json$Decode$andThen,
+											function (pos) {
+												return A2(
+													$elm$json$Json$Decode$andThen,
+													function (level) {
+														return $elm$json$Json$Decode$succeed(
+															{level: level, pos: pos, v: v});
+													},
+													A2($elm$json$Json$Decode$field, 'level', $elm$json$Json$Decode$int));
+											},
+											A2(
+												$elm$json$Json$Decode$field,
+												'pos',
+												A2(
+													$elm$json$Json$Decode$andThen,
+													function (y) {
+														return A2(
+															$elm$json$Json$Decode$andThen,
+															function (x) {
+																return $elm$json$Json$Decode$succeed(
+																	{x: x, y: y});
+															},
+															A2($elm$json$Json$Decode$field, 'x', $elm$json$Json$Decode$int));
+													},
+													A2($elm$json$Json$Decode$field, 'y', $elm$json$Json$Decode$int))));
+									},
+									A2(
+										$elm$json$Json$Decode$field,
+										'v',
+										A2(
+											$elm$json$Json$Decode$andThen,
+											function (y) {
+												return A2(
+													$elm$json$Json$Decode$andThen,
+													function (x) {
+														return $elm$json$Json$Decode$succeed(
+															{x: x, y: y});
+													},
+													A2($elm$json$Json$Decode$field, 'x', $elm$json$Json$Decode$int));
+											},
+											A2($elm$json$Json$Decode$field, 'y', $elm$json$Json$Decode$int)))))));
 				},
 				A2($elm$json$Json$Decode$field, 'x', $elm$json$Json$Decode$float));
 		},
@@ -6090,6 +6143,36 @@ var $elm$random$Random$list = F2(
 			});
 	});
 var $elm$core$Debug$log = _Debug_log;
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
 var $author$project$Types$Kingyo = F3(
 	function (pos, v, level) {
 		return {level: level, pos: pos, v: v};
@@ -6174,8 +6257,8 @@ var $author$project$Main$randomKingyo = A6(
 		}),
 	A2($elm$random$Random$int, 0, 799),
 	A2($elm$random$Random$int, 0, 799),
-	A2($elm$random$Random$int, 6, 15),
-	A2($elm$random$Random$int, 6, 15),
+	A2($elm$random$Random$int, 6, 30),
+	A2($elm$random$Random$int, 6, 30),
 	A2($elm$random$Random$int, 1, 5));
 var $author$project$Main$sendKingyo = _Platform_outgoingPort(
 	'sendKingyo',
@@ -6234,6 +6317,46 @@ var $author$project$Main$sendXY = _Platform_outgoingPort(
 					'points',
 					$elm$json$Json$Encode$int($.points)),
 					_Utils_Tuple2(
+					'tsukamaeta',
+					$elm$json$Json$Encode$list(
+						function ($) {
+							return $elm$json$Json$Encode$object(
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										'level',
+										$elm$json$Json$Encode$int($.level)),
+										_Utils_Tuple2(
+										'pos',
+										function ($) {
+											return $elm$json$Json$Encode$object(
+												_List_fromArray(
+													[
+														_Utils_Tuple2(
+														'x',
+														$elm$json$Json$Encode$int($.x)),
+														_Utils_Tuple2(
+														'y',
+														$elm$json$Json$Encode$int($.y))
+													]));
+										}($.pos)),
+										_Utils_Tuple2(
+										'v',
+										function ($) {
+											return $elm$json$Json$Encode$object(
+												_List_fromArray(
+													[
+														_Utils_Tuple2(
+														'x',
+														$elm$json$Json$Encode$int($.x)),
+														_Utils_Tuple2(
+														'y',
+														$elm$json$Json$Encode$int($.y))
+													]));
+										}($.v))
+									]));
+						})($.tsukamaeta)),
+					_Utils_Tuple2(
 					'x',
 					$elm$json$Json$Encode$float($.x)),
 					_Utils_Tuple2(
@@ -6251,7 +6374,7 @@ var $author$project$Main$sukuu = F2(
 			$elm$core$List$filter,
 			function (k) {
 				return $elm$core$Basics$sqrt(
-					A2($elm$core$Basics$pow, k.pos.x - x, 2) + A2($elm$core$Basics$pow, k.pos.y - y, 2)) > 100;
+					A2($elm$core$Basics$pow, k.pos.x - x, 2) + A2($elm$core$Basics$pow, k.pos.y - y, 2)) > 40;
 			},
 			kingyos);
 	});
@@ -6326,7 +6449,7 @@ var $author$project$Main$update = F2(
 							players: A2(
 								$elm$core$List$map,
 								function (p) {
-									return _Utils_eq(p.name, info.name) ? _Utils_update(
+									return _Utils_eq(p.id, info.id) ? _Utils_update(
 										p,
 										{x: info.x, y: info.y}) : p;
 								},
@@ -6388,18 +6511,32 @@ var $author$project$Main$update = F2(
 					$author$project$Main$sukuu,
 					_Utils_Tuple2(x, y),
 					model.kingyos);
+				var newTsukamaeta = A3(
+					$elm$core$List$foldl,
+					F2(
+						function (kingyo, tsukamaeta) {
+							return A2($elm$core$List$member, kingyo, newKingyos) ? tsukamaeta : _Utils_ap(
+								tsukamaeta,
+								_List_fromArray(
+									[kingyo]));
+						}),
+					A2(
+						$elm$core$List$indexedMap,
+						F2(
+							function (i, k) {
+								return _Utils_update(
+									k,
+									{
+										pos: {x: $author$project$Main$pondWidth + 100, y: (i + 1) * 100}
+									});
+							}),
+						model.tsukamaeta),
+					model.kingyos);
 				var gained = $elm$core$List$length(model.kingyos) - $elm$core$List$length(newKingyos);
-				return model.host ? _Utils_Tuple2(
+				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							kingyos: A2(
-								$author$project$Main$sukuu,
-								_Utils_Tuple2(x, y),
-								model.kingyos),
-							moving: false,
-							points: model.points + gained
-						}),
+						{kingyos: newKingyos, moving: false, points: model.points + gained, tsukamaeta: newTsukamaeta}),
 					$author$project$Main$caught(
 						{
 							id: function () {
@@ -6413,38 +6550,21 @@ var $author$project$Main$update = F2(
 							}(),
 							kingyos: newKingyos,
 							points: model.points + gained
-						})) : _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{moving: false, points: model.points + gained}),
-					$author$project$Main$caught(
-						{
-							id: function () {
-								var _v4 = model.id;
-								if (_v4.$ === 'Nothing') {
-									return '';
-								} else {
-									var id = _v4.a;
-									return id;
-								}
-							}(),
-							kingyos: newKingyos,
-							points: model.points + gained
 						}));
 			default:
-				var _v5 = msg.a;
-				var x = _v5.a;
-				var y = _v5.b;
+				var _v4 = msg.a;
+				var x = _v4.a;
+				var y = _v4.b;
 				if (model.moving) {
-					var _v6 = model.id;
-					if (_v6.$ === 'Just') {
-						var id = _v6.a;
+					var _v5 = model.id;
+					if (_v5.$ === 'Just') {
+						var id = _v5.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
 								{x: x, y: y}),
 							$author$project$Main$sendXY(
-								{id: id, name: model.name, points: model.points, x: x, y: y}));
+								{id: id, name: model.name, points: model.points, tsukamaeta: model.tsukamaeta, x: x, y: y}));
 					} else {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					}
@@ -6521,12 +6641,709 @@ var $author$project$Main$amiView = function (p) {
 					]))
 			]));
 };
-var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$duration_ = function (_v0) {
+	var d = _v0.a;
+	return d;
+};
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
 			f(x));
 	});
+var $elm$core$String$concat = function (strings) {
+	return A2($elm$core$String$join, '', strings);
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$joinWith = function (f) {
+	return A2(
+		$elm$core$Basics$composeR,
+		$elm$core$List$map(f),
+		$elm$core$String$concat);
+};
+var $elm$core$Set$Set_elm_builtin = function (a) {
+	return {$: 'Set_elm_builtin', a: a};
+};
+var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
+var $elm$core$Set$insert = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
+	});
+var $elm$core$Set$fromList = function (list) {
+	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$escapedChars_ = $elm$core$Set$fromList(
+	_List_fromArray(
+		[
+			_Utils_chr('.'),
+			_Utils_chr(' '),
+			_Utils_chr(','),
+			_Utils_chr('#'),
+			_Utils_chr('$'),
+			_Utils_chr('%'),
+			_Utils_chr('('),
+			_Utils_chr(')'),
+			_Utils_chr('&'),
+			_Utils_chr(';'),
+			_Utils_chr(':'),
+			_Utils_chr('\"'),
+			_Utils_chr('\''),
+			_Utils_chr('*'),
+			_Utils_chr('~'),
+			_Utils_chr('!'),
+			_Utils_chr('@'),
+			_Utils_chr('^'),
+			_Utils_chr('+'),
+			_Utils_chr('='),
+			_Utils_chr('/'),
+			_Utils_chr('?'),
+			_Utils_chr('>'),
+			_Utils_chr('<'),
+			_Utils_chr('['),
+			_Utils_chr(']'),
+			_Utils_chr('{'),
+			_Utils_chr('}'),
+			_Utils_chr('|'),
+			_Utils_chr('`')
+		]));
+var $elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$get, key, dict);
+		if (_v0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var $elm$core$Set$member = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return A2($elm$core$Dict$member, key, dict);
+	});
+var $elm$core$Basics$not = _Basics_not;
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$escapedChars = function (c) {
+	return !A2($elm$core$Set$member, c, $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$escapedChars_);
+};
+var $elm$core$String$filter = _String_filter;
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$escape = $elm$core$String$filter($andrewMacmurray$elm_simple_animation$Internal$Animation$Property$escapedChars);
+var $elm$core$Basics$round = _Basics_round;
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$rounded = F2(
+	function (n, val) {
+		return $elm$core$String$fromInt(
+			$elm$core$Basics$round(val) * n);
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$name = function (t) {
+	switch (t.$) {
+		case 'Translate':
+			switch (t.a.$) {
+				case 'Y':
+					var y_ = t.a.a;
+					return 'y' + A2($andrewMacmurray$elm_simple_animation$Internal$Transform$rounded, 1, y_);
+				case 'X':
+					var x_ = t.a.a;
+					return 'x' + A2($andrewMacmurray$elm_simple_animation$Internal$Transform$rounded, 1, x_);
+				default:
+					var _v1 = t.a;
+					var x_ = _v1.a;
+					var y_ = _v1.b;
+					return 'x' + (A2($andrewMacmurray$elm_simple_animation$Internal$Transform$rounded, 1, x_) + ('y' + A2($andrewMacmurray$elm_simple_animation$Internal$Transform$rounded, 1, y_)));
+			}
+		case 'Rotate':
+			var r_ = t.a;
+			return 'r' + A2($andrewMacmurray$elm_simple_animation$Internal$Transform$rounded, 1, r_);
+		default:
+			var x_ = t.a;
+			var y_ = t.b;
+			return 'sx' + (A2($andrewMacmurray$elm_simple_animation$Internal$Transform$rounded, 100, x_) + ('sy' + A2($andrewMacmurray$elm_simple_animation$Internal$Transform$rounded, 100, y_)));
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$rounded = F2(
+	function (n, val) {
+		return $elm$core$String$fromInt(
+			$elm$core$Basics$round(val * n));
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$name = function (prop) {
+	switch (prop.$) {
+		case 'Opacity':
+			var n = prop.a;
+			return 'o' + A2($andrewMacmurray$elm_simple_animation$Internal$Animation$Property$rounded, 100, n);
+		case 'Transform':
+			var t = prop.a;
+			return $andrewMacmurray$elm_simple_animation$Internal$Transform$name(t);
+		default:
+			var n = prop.a;
+			var p = prop.b;
+			return _Utils_ap(
+				$andrewMacmurray$elm_simple_animation$Internal$Animation$Property$escape(n),
+				$andrewMacmurray$elm_simple_animation$Internal$Animation$Property$escape(p));
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$frameName = function (_v0) {
+	var dur = _v0.a;
+	var props = _v0.b;
+	return 'f' + ($elm$core$String$fromInt(
+		$elm$core$Basics$round(dur)) + A2($andrewMacmurray$elm_simple_animation$Internal$Animation$joinWith, $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$name, props));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$framesNames = $andrewMacmurray$elm_simple_animation$Internal$Animation$joinWith($andrewMacmurray$elm_simple_animation$Internal$Animation$frameName);
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$frames_ = function (_v0) {
+	var f = _v0.c;
+	return f;
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$isEmpty = function (anim) {
+	return !$andrewMacmurray$elm_simple_animation$Internal$Animation$duration_(anim);
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$iterationName = function (i) {
+	if (i.$ === 'Loop') {
+		return 'infinite';
+	} else {
+		var count = i.a;
+		return 'count-' + $elm$core$String$fromInt(count);
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Ease$toString = function (e) {
+	switch (e.$) {
+		case 'Cubic':
+			var a = e.a;
+			var b = e.b;
+			var c = e.c;
+			var d = e.d;
+			return 'cubic-bezier(' + (A2(
+				$elm$core$String$join,
+				',',
+				_List_fromArray(
+					[
+						$elm$core$String$fromFloat(a),
+						$elm$core$String$fromFloat(b),
+						$elm$core$String$fromFloat(c),
+						$elm$core$String$fromFloat(d)
+					])) + ')');
+		case 'Linear':
+			return 'linear';
+		case 'Ease':
+			return 'ease';
+		case 'EaseIn':
+			return 'ease-in';
+		case 'EaseOut':
+			return 'ease-out';
+		default:
+			return 'ease-in-out';
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$optionName = function (o) {
+	switch (o.$) {
+		case 'Delay':
+			var n = o.a;
+			return 'd' + $elm$core$String$fromInt(n);
+		case 'Ease':
+			var ease = o.a;
+			return $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$escape(
+				$andrewMacmurray$elm_simple_animation$Internal$Ease$toString(ease));
+		case 'Iteration':
+			var i = o.a;
+			return $andrewMacmurray$elm_simple_animation$Internal$Animation$iterationName(i);
+		case 'Yoyo':
+			return 'yoyo';
+		default:
+			return 'rev';
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$optionNames = $andrewMacmurray$elm_simple_animation$Internal$Animation$joinWith($andrewMacmurray$elm_simple_animation$Internal$Animation$optionName);
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$rawOptions_ = function (_v0) {
+	var o = _v0.b;
+	return o;
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$name_ = function (anim) {
+	return $andrewMacmurray$elm_simple_animation$Internal$Animation$isEmpty(anim) ? 'anim-empty' : ('anim-' + ($elm$core$String$fromInt(
+		$andrewMacmurray$elm_simple_animation$Internal$Animation$duration_(anim)) + ($andrewMacmurray$elm_simple_animation$Internal$Animation$optionNames(
+		$andrewMacmurray$elm_simple_animation$Internal$Animation$rawOptions_(anim)) + $andrewMacmurray$elm_simple_animation$Internal$Animation$framesNames(
+		$andrewMacmurray$elm_simple_animation$Internal$Animation$frames_(anim)))));
+};
+var $elm$virtual_dom$VirtualDom$node = function (tag) {
+	return _VirtualDom_node(
+		_VirtualDom_noScript(tag));
+};
+var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
+var $andrewMacmurray$elm_simple_animation$Internal$Unit$ms = function (n) {
+	return $elm$core$String$fromInt(n) + 'ms';
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$animationDuration = function (anim) {
+	return $andrewMacmurray$elm_simple_animation$Internal$Unit$ms(
+		$andrewMacmurray$elm_simple_animation$Internal$Animation$duration_(anim));
+};
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$collectOption = F2(
+	function (o, opts) {
+		switch (o.$) {
+			case 'Delay':
+				var ms = o.a;
+				return _Utils_update(
+					opts,
+					{
+						delay: $elm$core$Maybe$Just(ms)
+					});
+			case 'Iteration':
+				var i = o.a;
+				return _Utils_update(
+					opts,
+					{
+						iteration: $elm$core$Maybe$Just(i)
+					});
+			case 'Ease':
+				var e = o.a;
+				return _Utils_update(
+					opts,
+					{
+						timingFunction: $elm$core$Maybe$Just(e)
+					});
+			case 'Yoyo':
+				return _Utils_update(
+					opts,
+					{isYoyo: true});
+			default:
+				return _Utils_update(
+					opts,
+					{reversed: true});
+		}
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$defaults = {delay: $elm$core$Maybe$Nothing, isYoyo: false, iteration: $elm$core$Maybe$Nothing, reversed: false, timingFunction: $elm$core$Maybe$Nothing};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Count = function (a) {
+	return {$: 'Count', a: a};
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Loop = {$: 'Loop'};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$iterationForYoyo = function (opts) {
+	var _v0 = opts.iteration;
+	if (_v0.$ === 'Just') {
+		if (_v0.a.$ === 'Loop') {
+			var _v1 = _v0.a;
+			return $andrewMacmurray$elm_simple_animation$Internal$Animation$Loop;
+		} else {
+			var n = _v0.a.a;
+			return $andrewMacmurray$elm_simple_animation$Internal$Animation$Count(n * 2);
+		}
+	} else {
+		return $andrewMacmurray$elm_simple_animation$Internal$Animation$Count(2);
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$normalise = function (opts) {
+	return opts.isYoyo ? _Utils_update(
+		opts,
+		{
+			iteration: $elm$core$Maybe$Just(
+				$andrewMacmurray$elm_simple_animation$Internal$Animation$iterationForYoyo(opts))
+		}) : opts;
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$options_ = A2(
+	$elm$core$Basics$composeR,
+	$andrewMacmurray$elm_simple_animation$Internal$Animation$rawOptions_,
+	A2(
+		$elm$core$Basics$composeR,
+		A2($elm$core$List$foldl, $andrewMacmurray$elm_simple_animation$Internal$Animation$collectOption, $andrewMacmurray$elm_simple_animation$Internal$Animation$defaults),
+		$andrewMacmurray$elm_simple_animation$Internal$Animation$normalise));
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$renderDirection = function (d) {
+	switch (d.$) {
+		case 'Alternate_':
+			return 'alternate';
+		case 'Reverse_':
+			return 'reverse';
+		default:
+			return 'alternate-reverse';
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$renderIteration = function (i) {
+	if (i.$ === 'Loop') {
+		return 'infinite';
+	} else {
+		var count = i.a;
+		return $elm$core$String$fromInt(count);
+	}
+};
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$renderOption = F2(
+	function (name, toProp) {
+		return $elm$core$Maybe$map(
+			function (x) {
+				return name + (': ' + toProp(x));
+			});
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$AlternateReverse_ = {$: 'AlternateReverse_'};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Alternate_ = {$: 'Alternate_'};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Reverse_ = {$: 'Reverse_'};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$toDirection = function (opts) {
+	return (opts.isYoyo && opts.reversed) ? $elm$core$Maybe$Just($andrewMacmurray$elm_simple_animation$Internal$Animation$AlternateReverse_) : (opts.reversed ? $elm$core$Maybe$Just($andrewMacmurray$elm_simple_animation$Internal$Animation$Reverse_) : (opts.isYoyo ? $elm$core$Maybe$Just($andrewMacmurray$elm_simple_animation$Internal$Animation$Alternate_) : $elm$core$Maybe$Nothing));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$renderOptions_ = function (opts) {
+	return _List_fromArray(
+		[
+			A3($andrewMacmurray$elm_simple_animation$Internal$Animation$renderOption, 'animation-delay', $andrewMacmurray$elm_simple_animation$Internal$Unit$ms, opts.delay),
+			A3($andrewMacmurray$elm_simple_animation$Internal$Animation$renderOption, 'animation-timing-function', $andrewMacmurray$elm_simple_animation$Internal$Ease$toString, opts.timingFunction),
+			A3($andrewMacmurray$elm_simple_animation$Internal$Animation$renderOption, 'animation-iteration-count', $andrewMacmurray$elm_simple_animation$Internal$Animation$renderIteration, opts.iteration),
+			A3(
+			$andrewMacmurray$elm_simple_animation$Internal$Animation$renderOption,
+			'animation-direction',
+			$andrewMacmurray$elm_simple_animation$Internal$Animation$renderDirection,
+			$andrewMacmurray$elm_simple_animation$Internal$Animation$toDirection(opts))
+		]);
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$renderOptions = A2(
+	$elm$core$Basics$composeR,
+	$andrewMacmurray$elm_simple_animation$Internal$Animation$options_,
+	A2(
+		$elm$core$Basics$composeR,
+		$andrewMacmurray$elm_simple_animation$Internal$Animation$renderOptions_,
+		$elm$core$List$filterMap($elm$core$Basics$identity)));
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$classProperties = function (anim) {
+	return A2(
+		$elm$core$String$join,
+		';\n',
+		A2(
+			$elm$core$List$append,
+			_List_fromArray(
+				[
+					'animation-name: ' + $andrewMacmurray$elm_simple_animation$Internal$Animation$name_(anim),
+					'animation-duration: ' + $andrewMacmurray$elm_simple_animation$Internal$Animation$animationDuration(anim),
+					'animation-fill-mode: both'
+				]),
+			$andrewMacmurray$elm_simple_animation$Internal$Animation$renderOptions(anim)));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$classDefinition_ = function (anim) {
+	return '.' + ($andrewMacmurray$elm_simple_animation$Internal$Animation$name_(anim) + ('{\n' + ($andrewMacmurray$elm_simple_animation$Internal$Animation$classProperties(anim) + '\n};')));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Unit$pc = function (n) {
+	return $elm$core$String$fromFloat(n) + '%';
+};
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$filterMaybes = $elm$core$List$filterMap($elm$core$Basics$identity);
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$getProp = function (f) {
+	return A2(
+		$elm$core$Basics$composeR,
+		$elm$core$List$filterMap(f),
+		$elm$core$List$head);
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$opacity_ = function (p) {
+	if (p.$ === 'Opacity') {
+		var n = p.a;
+		return $elm$core$Maybe$Just(
+			'opacity:' + $elm$core$String$fromFloat(n));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$raw_ = function (p) {
+	if (p.$ === 'Raw') {
+		var k = p.a;
+		var v = p.b;
+		return $elm$core$Maybe$Just(k + (':' + v));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$collectTransforms = A2(
+	$elm$core$List$foldl,
+	F2(
+		function (val, acc) {
+			if (val.$ === 'Transform') {
+				var t = val.a;
+				return A2($elm$core$List$cons, t, acc);
+			} else {
+				return acc;
+			}
+		}),
+	_List_Nil);
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$combine = F2(
+	function (transform, combined) {
+		switch (transform.$) {
+			case 'Rotate':
+				var n = transform.a;
+				return _Utils_update(
+					combined,
+					{
+						rotate: $elm$core$Maybe$Just(n)
+					});
+			case 'ScaleXY':
+				var x_ = transform.a;
+				var y_ = transform.b;
+				return _Utils_update(
+					combined,
+					{
+						scale: $elm$core$Maybe$Just(
+							_Utils_Tuple2(x_, y_))
+					});
+			default:
+				switch (transform.a.$) {
+					case 'XY':
+						var _v1 = transform.a;
+						var x_ = _v1.a;
+						var y_ = _v1.b;
+						return _Utils_update(
+							combined,
+							{
+								xy: $elm$core$Maybe$Just(
+									_Utils_Tuple2(x_, y_))
+							});
+					case 'X':
+						var n = transform.a.a;
+						return _Utils_update(
+							combined,
+							{
+								x: $elm$core$Maybe$Just(n)
+							});
+					default:
+						var n = transform.a.a;
+						return _Utils_update(
+							combined,
+							{
+								y: $elm$core$Maybe$Just(n)
+							});
+				}
+		}
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$empty = {rotate: $elm$core$Maybe$Nothing, scale: $elm$core$Maybe$Nothing, x: $elm$core$Maybe$Nothing, xy: $elm$core$Maybe$Nothing, y: $elm$core$Maybe$Nothing};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$render_ = function (f) {
+	return A2(
+		$elm$core$Basics$composeR,
+		$elm$core$Maybe$map(f),
+		$elm$core$Maybe$withDefault(''));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$deg = function (n) {
+	return (!n) ? '0' : ($elm$core$String$fromFloat(n) + 'deg');
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$rotate_ = function (n) {
+	return $elm$core$String$concat(
+		_List_fromArray(
+			[
+				'rotate3d(0,0,1,',
+				$andrewMacmurray$elm_simple_animation$Internal$Transform$deg(n),
+				')'
+			]));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$scale_ = function (_v0) {
+	var x_ = _v0.a;
+	var y_ = _v0.b;
+	return $elm$core$String$concat(
+		_List_fromArray(
+			[
+				'scale3d(',
+				$elm$core$String$fromFloat(x_),
+				',',
+				$elm$core$String$fromFloat(y_),
+				',1)'
+			]));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$px = function (n) {
+	return (!n) ? '0' : ($elm$core$String$fromFloat(n) + 'px');
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$translateXY_ = F2(
+	function (x_, y_) {
+		return $elm$core$String$concat(
+			_List_fromArray(
+				[
+					'translate3d(',
+					$andrewMacmurray$elm_simple_animation$Internal$Transform$px(x_),
+					',',
+					$andrewMacmurray$elm_simple_animation$Internal$Transform$px(y_),
+					',0)'
+				]));
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$translateX_ = function (n) {
+	return $elm$core$String$concat(
+		_List_fromArray(
+			[
+				'translate3d(',
+				$andrewMacmurray$elm_simple_animation$Internal$Transform$px(n),
+				',0,0)'
+			]));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$translateY_ = function (n) {
+	return $elm$core$String$concat(
+		_List_fromArray(
+			[
+				'translate3d(0,',
+				$andrewMacmurray$elm_simple_animation$Internal$Transform$px(n),
+				',0)'
+			]));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$translate_ = function (combined) {
+	var _v0 = _Utils_Tuple3(combined.xy, combined.x, combined.y);
+	if (_v0.a.$ === 'Just') {
+		var _v1 = _v0.a.a;
+		var x_ = _v1.a;
+		var y_ = _v1.b;
+		return A2($andrewMacmurray$elm_simple_animation$Internal$Transform$translateXY_, x_, y_);
+	} else {
+		if (_v0.b.$ === 'Just') {
+			if (_v0.c.$ === 'Nothing') {
+				var _v2 = _v0.a;
+				var x_ = _v0.b.a;
+				var _v3 = _v0.c;
+				return $andrewMacmurray$elm_simple_animation$Internal$Transform$translateX_(x_);
+			} else {
+				var _v6 = _v0.a;
+				var x_ = _v0.b.a;
+				var y_ = _v0.c.a;
+				return A2($andrewMacmurray$elm_simple_animation$Internal$Transform$translateXY_, x_, y_);
+			}
+		} else {
+			if (_v0.c.$ === 'Just') {
+				var _v4 = _v0.a;
+				var _v5 = _v0.b;
+				var y_ = _v0.c.a;
+				return $andrewMacmurray$elm_simple_animation$Internal$Transform$translateY_(y_);
+			} else {
+				var _v7 = _v0.a;
+				var _v8 = _v0.b;
+				var _v9 = _v0.c;
+				return '';
+			}
+		}
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$render = function (combined) {
+	return A2(
+		$elm$core$String$join,
+		' ',
+		A2(
+			$elm$core$List$filter,
+			A2($elm$core$Basics$composeR, $elm$core$String$isEmpty, $elm$core$Basics$not),
+			_List_fromArray(
+				[
+					$andrewMacmurray$elm_simple_animation$Internal$Transform$translate_(combined),
+					A2($andrewMacmurray$elm_simple_animation$Internal$Transform$render_, $andrewMacmurray$elm_simple_animation$Internal$Transform$scale_, combined.scale),
+					A2($andrewMacmurray$elm_simple_animation$Internal$Transform$render_, $andrewMacmurray$elm_simple_animation$Internal$Transform$rotate_, combined.rotate)
+				])));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$toString = A2(
+	$elm$core$Basics$composeR,
+	A2($elm$core$List$foldl, $andrewMacmurray$elm_simple_animation$Internal$Transform$combine, $andrewMacmurray$elm_simple_animation$Internal$Transform$empty),
+	$andrewMacmurray$elm_simple_animation$Internal$Transform$render);
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$transform_ = function (props) {
+	var _v0 = $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$collectTransforms(props);
+	if (!_v0.b) {
+		return $elm$core$Maybe$Nothing;
+	} else {
+		var transforms = _v0;
+		return $elm$core$Maybe$Just(
+			'transform:' + $andrewMacmurray$elm_simple_animation$Internal$Transform$toString(transforms));
+	}
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$render = function (props) {
+	return A2(
+		$elm$core$String$join,
+		';',
+		$andrewMacmurray$elm_simple_animation$Internal$Animation$Property$filterMaybes(
+			$elm$core$List$concat(
+				_List_fromArray(
+					[
+						A2($elm$core$List$map, $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$raw_, props),
+						_List_fromArray(
+						[
+							A2($andrewMacmurray$elm_simple_animation$Internal$Animation$Property$getProp, $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$opacity_, props),
+							$andrewMacmurray$elm_simple_animation$Internal$Animation$Property$transform_(props)
+						])
+					]))));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$renderFrame = function (_v0) {
+	var percent = _v0.a;
+	var properties = _v0.b;
+	return $andrewMacmurray$elm_simple_animation$Internal$Unit$pc(percent) + ('{' + ($andrewMacmurray$elm_simple_animation$Internal$Animation$Property$render(properties) + ';}'));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$keyframes_ = A2(
+	$elm$core$Basics$composeR,
+	$andrewMacmurray$elm_simple_animation$Internal$Animation$frames_,
+	A2(
+		$elm$core$Basics$composeR,
+		$elm$core$List$map($andrewMacmurray$elm_simple_animation$Internal$Animation$renderFrame),
+		$elm$core$String$join('\n')));
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$keyframesAnimation_ = function (anim) {
+	return '@keyframes ' + ($andrewMacmurray$elm_simple_animation$Internal$Animation$name_(anim) + ('{' + ($andrewMacmurray$elm_simple_animation$Internal$Animation$keyframes_(anim) + '}')));
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$stylesheet_ = function (anim) {
+	return $andrewMacmurray$elm_simple_animation$Internal$Animation$keyframesAnimation_(anim) + ('\n' + $andrewMacmurray$elm_simple_animation$Internal$Animation$classDefinition_(anim));
+};
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$Animated$toStylesheet_ = function (anim) {
+	return A3(
+		$elm$html$Html$node,
+		'style',
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				$andrewMacmurray$elm_simple_animation$Internal$Animation$stylesheet_(anim))
+			]));
+};
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$Animated$node = F5(
+	function (options, node_, anim, attrs, els) {
+		return A2(
+			node_,
+			A2(
+				$elm$core$List$cons,
+				options._class(
+					$andrewMacmurray$elm_simple_animation$Internal$Animation$name_(anim)),
+				attrs),
+			A2(
+				$elm$core$List$cons,
+				$andrewMacmurray$elm_simple_animation$Simple$Animation$Animated$toStylesheet_(anim),
+				els));
+	});
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$Animated$svg = $andrewMacmurray$elm_simple_animation$Simple$Animation$Animated$node;
+var $author$project$Main$animatedSvg = $andrewMacmurray$elm_simple_animation$Simple$Animation$Animated$svg(
+	{_class: $elm$svg$Svg$Attributes$class});
+var $author$project$Main$animatedG = $author$project$Main$animatedSvg($elm$svg$Svg$g);
+var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$svg$Svg$Attributes$fillOpacity = _VirtualDom_attribute('fill-opacity');
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
@@ -6863,12 +7680,338 @@ var $author$project$Main$pointView = function (p) {
 				p.name + (':' + $elm$core$String$fromInt(p.points)))
 			]));
 };
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$Opacity = function (a) {
+	return {$: 'Opacity', a: a};
+};
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$Property$opacity = $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$Opacity;
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$Transform = function (a) {
+	return {$: 'Transform', a: a};
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$ScaleXY = F2(
+	function (a, b) {
+		return {$: 'ScaleXY', a: a, b: b};
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$scaleXY = $andrewMacmurray$elm_simple_animation$Internal$Transform$ScaleXY;
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$Property$scale = function (n) {
+	return $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$Transform(
+		A2($andrewMacmurray$elm_simple_animation$Internal$Transform$scaleXY, n, n));
+};
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$Step = F2(
+	function (a, b) {
+		return {$: 'Step', a: a, b: b};
+	});
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$step = $andrewMacmurray$elm_simple_animation$Simple$Animation$Step;
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$Stepped = function (a) {
+	return {$: 'Stepped', a: a};
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Animation = F3(
+	function (a, b, c) {
+		return {$: 'Animation', a: a, b: b, c: c};
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Animation$Frame = F2(
+	function (a, b) {
+		return {$: 'Frame', a: a, b: b};
+	});
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$duration = $andrewMacmurray$elm_simple_animation$Internal$Animation$duration_;
+var $elm$core$Basics$ge = _Utils_ge;
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$adjustCompleteWait = F2(
+	function (anim, timePassed) {
+		var duration_ = $andrewMacmurray$elm_simple_animation$Simple$Animation$duration(anim);
+		return ((duration_ - timePassed) >= 1) ? duration_ : (timePassed + 1);
+	});
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$frameProps = function (_v0) {
+	var props = _v0.b;
+	return props;
+};
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$accumDuration = F2(
+	function (step_, curr) {
+		switch (step_.$) {
+			case 'Step':
+				var d = step_.a;
+				return d + curr;
+			case 'Wait':
+				var d = step_.a;
+				return d + curr;
+			default:
+				var anim = step_.a;
+				return A2($andrewMacmurray$elm_simple_animation$Simple$Animation$adjustCompleteWait, anim, curr);
+		}
+	});
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$totalDuration = A2($elm$core$List$foldl, $andrewMacmurray$elm_simple_animation$Simple$Animation$accumDuration, 0);
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$toFrames = F2(
+	function (firstFrame, steps_) {
+		var percentPerMs = 100 / $andrewMacmurray$elm_simple_animation$Simple$Animation$totalDuration(steps_);
+		var getFrame = F2(
+			function (f, _v2) {
+				var n = _v2.a;
+				var xs = _v2.b;
+				var cur = _v2.c;
+				switch (f.$) {
+					case 'Step':
+						var d = f.a;
+						var props = f.b;
+						return _Utils_Tuple3(
+							n + d,
+							_Utils_ap(
+								xs,
+								_List_fromArray(
+									[cur])),
+							A2($andrewMacmurray$elm_simple_animation$Internal$Animation$Frame, percentPerMs * (n + d), props));
+					case 'Wait':
+						var d = f.a;
+						return _Utils_Tuple3(
+							n + d,
+							_Utils_ap(
+								xs,
+								_List_fromArray(
+									[cur])),
+							A2(
+								$andrewMacmurray$elm_simple_animation$Internal$Animation$Frame,
+								percentPerMs * (n + d),
+								$andrewMacmurray$elm_simple_animation$Simple$Animation$frameProps(cur)));
+					default:
+						var d = f.a;
+						var dur = A2($andrewMacmurray$elm_simple_animation$Simple$Animation$adjustCompleteWait, d, n);
+						return _Utils_Tuple3(
+							dur,
+							_Utils_ap(
+								xs,
+								_List_fromArray(
+									[cur])),
+							A2(
+								$andrewMacmurray$elm_simple_animation$Internal$Animation$Frame,
+								percentPerMs * dur,
+								$andrewMacmurray$elm_simple_animation$Simple$Animation$frameProps(cur)));
+				}
+			});
+		var _v0 = A3(
+			$elm$core$List$foldl,
+			getFrame,
+			_Utils_Tuple3(
+				0,
+				_List_Nil,
+				A2($andrewMacmurray$elm_simple_animation$Internal$Animation$Frame, 0, firstFrame)),
+			steps_);
+		var frames_ = _v0.b;
+		var currentFrame = _v0.c;
+		return _Utils_ap(
+			frames_,
+			_List_fromArray(
+				[currentFrame]));
+	});
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$toAnimation = function (_v0) {
+	var s = _v0.a;
+	return A3(
+		$andrewMacmurray$elm_simple_animation$Internal$Animation$Animation,
+		$andrewMacmurray$elm_simple_animation$Simple$Animation$totalDuration(s.steps),
+		s.options,
+		A2($andrewMacmurray$elm_simple_animation$Simple$Animation$toFrames, s.startAt, s.steps));
+};
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$steps = F2(
+	function (_v0, steps_) {
+		var options = _v0.options;
+		var startAt = _v0.startAt;
+		return $andrewMacmurray$elm_simple_animation$Simple$Animation$toAnimation(
+			$andrewMacmurray$elm_simple_animation$Simple$Animation$Stepped(
+				{options: options, startAt: startAt, steps: steps_}));
+	});
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$Translate = function (a) {
+	return {$: 'Translate', a: a};
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$X = function (a) {
+	return {$: 'X', a: a};
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$x = A2($elm$core$Basics$composeL, $andrewMacmurray$elm_simple_animation$Internal$Transform$Translate, $andrewMacmurray$elm_simple_animation$Internal$Transform$X);
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$Property$x = A2($elm$core$Basics$composeL, $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$Transform, $andrewMacmurray$elm_simple_animation$Internal$Transform$x);
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$Y = function (a) {
+	return {$: 'Y', a: a};
+};
+var $andrewMacmurray$elm_simple_animation$Internal$Transform$y = A2($elm$core$Basics$composeL, $andrewMacmurray$elm_simple_animation$Internal$Transform$Translate, $andrewMacmurray$elm_simple_animation$Internal$Transform$Y);
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$Property$y = A2($elm$core$Basics$composeL, $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$Transform, $andrewMacmurray$elm_simple_animation$Internal$Transform$y);
+var $author$project$Main$propagate = F3(
+	function (x, y, moving) {
+		return A2(
+			$andrewMacmurray$elm_simple_animation$Simple$Animation$steps,
+			{
+				options: _List_Nil,
+				startAt: _List_fromArray(
+					[
+						$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$x(x),
+						$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$y(y),
+						$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$scale(1),
+						$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$opacity(
+						moving ? 0 : 1)
+					])
+			},
+			_List_fromArray(
+				[
+					A2(
+					$andrewMacmurray$elm_simple_animation$Simple$Animation$step,
+					1000,
+					_List_fromArray(
+						[
+							$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$scale(20),
+							$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$x(x),
+							$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$y(y)
+						])),
+					A2(
+					$andrewMacmurray$elm_simple_animation$Simple$Animation$step,
+					300,
+					_List_fromArray(
+						[
+							$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$opacity(0),
+							$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$scale(50),
+							$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$x(x),
+							$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$y(y)
+						]))
+				]));
+	});
 var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
 var $author$project$Main$relativePos = function (event) {
 	return event.pointer.offsetPos;
 };
 var $elm$svg$Svg$Attributes$strokeDasharray = _VirtualDom_attribute('stroke-dasharray');
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
+var $andrewMacmurray$elm_simple_animation$Simple$Animation$fromTo = F3(
+	function (o, from_, to_) {
+		return $andrewMacmurray$elm_simple_animation$Simple$Animation$toAnimation(
+			$andrewMacmurray$elm_simple_animation$Simple$Animation$Stepped(
+				{
+					options: o.options,
+					startAt: from_,
+					steps: _List_fromArray(
+						[
+							A2($andrewMacmurray$elm_simple_animation$Simple$Animation$step, o.duration, to_)
+						])
+				}));
+	});
+var $author$project$Main$toOke = F2(
+	function (_v0, hiki) {
+		var x = _v0.a;
+		var y = _v0.b;
+		return A3(
+			$andrewMacmurray$elm_simple_animation$Simple$Animation$fromTo,
+			{duration: 500, options: _List_Nil},
+			_List_fromArray(
+				[
+					$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$x(x),
+					$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$y(y)
+				]),
+			_List_fromArray(
+				[
+					$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$x($author$project$Main$pondWidth + 100),
+					$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$y(100 * (hiki + 1))
+				]));
+	});
+var $author$project$Main$tsukamaetaKingyoView = F2(
+	function (hiki, kingyo) {
+		var vy = kingyo.v.y;
+		var vx = kingyo.v.x;
+		var transtr = '(' + ($elm$core$String$fromInt(kingyo.pos.x) + (',' + ($elm$core$String$fromInt(kingyo.pos.y) + ')')));
+		var theta = $elm$core$String$fromFloat(
+			(kingyo.v.x > 0) ? ((180 / $elm$core$Basics$pi) * $elm$core$Basics$atan(vy / vx)) : (180 + ((180 / $elm$core$Basics$pi) * $elm$core$Basics$atan(vy / vx))));
+		var py = kingyo.pos.y;
+		var px = kingyo.pos.x;
+		return A3(
+			$author$project$Main$animatedG,
+			A2(
+				$author$project$Main$toOke,
+				_Utils_Tuple2(px, py),
+				hiki),
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$transform(
+					'rotate(' + (theta + (',' + ($elm$core$String$fromInt(px) + (',' + ($elm$core$String$fromInt(py) + (')' + ('translate' + transtr))))))))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$svg$Svg$path,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$d('m 0 20 l 30 -20 l -30 -20 l -60 26 l 0 -12 z'),
+							$elm$svg$Svg$Attributes$fill('red'),
+							$elm$svg$Svg$Attributes$stroke('red')
+						]),
+					_List_Nil),
+					A2(
+					$elm$svg$Svg$circle,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$cx('15'),
+							$elm$svg$Svg$Attributes$cy('10'),
+							$elm$svg$Svg$Attributes$r('10'),
+							$elm$svg$Svg$Attributes$fill('white')
+						]),
+					_List_Nil),
+					A2(
+					$elm$svg$Svg$circle,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$cx('15'),
+							$elm$svg$Svg$Attributes$cy('10'),
+							$elm$svg$Svg$Attributes$r('8'),
+							$elm$svg$Svg$Attributes$fill('black')
+						]),
+					_List_Nil),
+					A2(
+					$elm$svg$Svg$circle,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$cx('15'),
+							$elm$svg$Svg$Attributes$cy('-10'),
+							$elm$svg$Svg$Attributes$r('10'),
+							$elm$svg$Svg$Attributes$fill('white')
+						]),
+					_List_Nil),
+					A2(
+					$elm$svg$Svg$circle,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$cx('15'),
+							$elm$svg$Svg$Attributes$cy('-10'),
+							$elm$svg$Svg$Attributes$r('8'),
+							$elm$svg$Svg$Attributes$fill('black')
+						]),
+					_List_Nil),
+					A2(
+					$elm$svg$Svg$circle,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$cx('18'),
+							$elm$svg$Svg$Attributes$cy('10'),
+							$elm$svg$Svg$Attributes$r('2'),
+							$elm$svg$Svg$Attributes$fill('white')
+						]),
+					_List_Nil),
+					A2(
+					$elm$svg$Svg$circle,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$cx('18'),
+							$elm$svg$Svg$Attributes$cy('-10'),
+							$elm$svg$Svg$Attributes$r('2'),
+							$elm$svg$Svg$Attributes$fill('white')
+						]),
+					_List_Nil),
+					A2(
+					$elm$svg$Svg$path,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$d('m 0 20 l -10 10 l -10 -5 z'),
+							$elm$svg$Svg$Attributes$fill('red')
+						]),
+					_List_Nil),
+					A2(
+					$elm$svg$Svg$path,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$d('m 0 -20 l -10 -10 l -10 5 z'),
+							$elm$svg$Svg$Attributes$fill('red')
+						]),
+					_List_Nil)
+				]));
+	});
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
@@ -6931,26 +8074,13 @@ var $author$project$Main$view = function (model) {
 						A2(
 						$elm$html$Html$div,
 						_List_Nil,
-						_Utils_ap(
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$span,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											$elm$core$String$fromInt(
-												$elm$core$List$length(model.players)))
-										]))
-								]),
-							A2($elm$core$List$map, $author$project$Main$pointView, model.players))),
+						A2($elm$core$List$map, $author$project$Main$pointView, model.players)),
 						A2(
 						$elm$svg$Svg$svg,
 						_List_fromArray(
 							[
 								$elm$svg$Svg$Attributes$width(
-								$elm$core$String$fromInt($author$project$Main$pondWidth)),
+								$elm$core$String$fromInt($author$project$Main$pondWidth + 200)),
 								$elm$svg$Svg$Attributes$height(
 								$elm$core$String$fromInt($author$project$Main$pondHeight))
 							]),
@@ -6961,11 +8091,43 @@ var $author$project$Main$view = function (model) {
 									$elm$svg$Svg$rect,
 									_List_fromArray(
 										[
-											$elm$svg$Svg$Attributes$width('100%'),
+											$elm$svg$Svg$Attributes$width(
+											$elm$core$String$fromInt($author$project$Main$pondWidth)),
 											$elm$svg$Svg$Attributes$height('100%'),
 											$elm$svg$Svg$Attributes$fill('skyblue')
 										]),
 									_List_Nil),
+									A3(
+									$author$project$Main$animatedG,
+									A3($author$project$Main$propagate, model.x, model.y, model.moving),
+									_List_Nil,
+									_List_fromArray(
+										[
+											A2(
+											$elm$svg$Svg$circle,
+											_List_fromArray(
+												[
+													$elm$svg$Svg$Attributes$cx('0'),
+													$elm$svg$Svg$Attributes$cy('0'),
+													$elm$svg$Svg$Attributes$r('40'),
+													$elm$svg$Svg$Attributes$fill('none'),
+													$elm$svg$Svg$Attributes$stroke('white'),
+													$elm$svg$Svg$Attributes$strokeWidth('5')
+												]),
+											_List_Nil),
+											A2(
+											$elm$svg$Svg$circle,
+											_List_fromArray(
+												[
+													$elm$svg$Svg$Attributes$cx('0'),
+													$elm$svg$Svg$Attributes$cy('0'),
+													$elm$svg$Svg$Attributes$r('50'),
+													$elm$svg$Svg$Attributes$fill('none'),
+													$elm$svg$Svg$Attributes$stroke('white'),
+													$elm$svg$Svg$Attributes$strokeWidth('5')
+												]),
+											_List_Nil)
+										])),
 									A2(
 									$elm$svg$Svg$circle,
 									_List_fromArray(
@@ -7006,7 +8168,41 @@ var $author$project$Main$view = function (model) {
 												]),
 											_List_Nil)
 										]),
-									A2($elm$core$List$map, $author$project$Main$kingyoView, model.kingyos)))))
+									_Utils_ap(
+										_List_fromArray(
+											[
+												A2(
+												$elm$svg$Svg$rect,
+												_List_fromArray(
+													[
+														$elm$svg$Svg$Attributes$width(
+														$elm$core$String$fromInt($author$project$Main$pondWidth)),
+														$elm$svg$Svg$Attributes$height('100%'),
+														$elm$svg$Svg$Attributes$fill('none'),
+														$elm$svg$Svg$Attributes$stroke('black')
+													]),
+												_List_Nil)
+											]),
+										_Utils_ap(
+											A2($elm$core$List$map, $author$project$Main$kingyoView, model.kingyos),
+											_Utils_ap(
+												_List_fromArray(
+													[
+														A2(
+														$elm$svg$Svg$rect,
+														_List_fromArray(
+															[
+																$elm$svg$Svg$Attributes$x(
+																$elm$core$String$fromInt($author$project$Main$pondWidth)),
+																$elm$svg$Svg$Attributes$y('0'),
+																$elm$svg$Svg$Attributes$width('200'),
+																$elm$svg$Svg$Attributes$height('100%'),
+																$elm$svg$Svg$Attributes$fill('white'),
+																$elm$svg$Svg$Attributes$stroke('black')
+															]),
+														_List_Nil)
+													]),
+												A2($elm$core$List$indexedMap, $author$project$Main$tsukamaetaKingyoView, model.tsukamaeta))))))))
 					]);
 			}
 		}());

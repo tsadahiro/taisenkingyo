@@ -12,6 +12,9 @@ import Html.Events.Extra.Pointer as Pointer
 import Time
 import Random
 import Types exposing (..)
+import Simple.Animation as Animation exposing (Animation)
+import Simple.Animation.Animated as Animated
+import Simple.Animation.Property as P
 
 
 pondWidth = 800
@@ -51,6 +54,7 @@ init flags =
     , players = []
     , id = Nothing
     , kingyos = []
+    , tsukamaeta = []
     }
   , Cmd.none
   )
@@ -61,8 +65,8 @@ randomKingyo =
         (\x y vx vy level -> Kingyo (Vec2D x y) (Vec2D vx vy) level)
         (Random.int 0 799)
         (Random.int 0 799)
-        (Random.int 6 15)
-        (Random.int 6 15)
+        (Random.int 6 30)
+        (Random.int 6 30)
         (Random.int 1 5)
             
 kingyoStep : Kingyo -> Kingyo
@@ -120,13 +124,13 @@ update msg model =
                          else
                              Cmd.none
                         )
-      Recv info ->
+      Recv info -> -- when other users movement is informed
           let
               exist = Debug.log "move" (0 < (List.length <| List.filter (\p -> p.name == info.name) model.players))
           in
               (if exist then
                    {model | players = List.map
-                        (\p -> if p.name == info.name then
+                        (\p -> if p.id == info.id then
                                    {p | x = info.x, y = info.y}
                                else
                                    p
@@ -163,19 +167,45 @@ update msg model =
       Up (x,y) ->
           let
               newKingyos = sukuu (x,y) model.kingyos
-              gained = (List.length model.kingyos) - (List.length newKingyos) 
+              gained = (List.length model.kingyos) - (List.length newKingyos)
+              newTsukamaeta = List.foldl (\kingyo tsukamaeta ->
+                                              if (List.member kingyo newKingyos) then
+                                                  tsukamaeta
+                                              else
+                                                  tsukamaeta++[kingyo]
+                                         ) (List.indexedMap
+                                                (\i k -> {k|pos={x=(pondWidth+100)
+                                                                ,y=((i+1)*100)}
+                                                         }
+                                                )
+                                                model.tsukamaeta
+                                           )
+                              model.kingyos
           in
+              ({model | moving = False
+               , points = model.points + gained
+               , kingyos = newKingyos
+               , tsukamaeta = newTsukamaeta
+               }
+              ,caught {kingyos = newKingyos
+                      ,points = model.points+gained
+                      ,id = case model.id of
+                                Nothing -> ""
+                                Just id -> id
+                      }
+              )
+              {--
               if model.host then
                   ({model | moving = False
                    , points = model.points + gained
-                   , kingyos = sukuu (x,y) model.kingyos
+                   , kingyos = newKingyos
                    }
                   ,caught {kingyos = newKingyos
-                           ,points = model.points+gained
-                           ,id = case model.id of
-                                     Nothing -> ""
-                                     Just id -> id
-                           }
+                          ,points = model.points+gained
+                          ,id = case model.id of
+                                    Nothing -> ""
+                                    Just id -> id
+                          }
                   )
               else
                   ({model | moving = False
@@ -188,13 +218,14 @@ update msg model =
                                      Just id -> id
                            }
                   )
+                  --}
           
       Move (x,y) ->
               if model.moving then
                   case model.id of
                       Just id ->
                           ({model | x = x, y = y}
-                          ,sendXY {name=model.name, x=x, y=y, id=id, points=model.points}
+                          ,sendXY {name=model.name, x=x, y=y, id=id, points=model.points, tsukamaeta=model.tsukamaeta}
                           )
                       Nothing ->
                           (model, Cmd.none)
@@ -204,7 +235,7 @@ update msg model =
 sukuu: (Float, Float) -> (List Kingyo) -> (List Kingyo)
 sukuu (x,y) kingyos =
     List.filter
-        (\k -> (sqrt (((toFloat k.pos.x)-x)^2+((toFloat k.pos.y)-y)^2)) > 100)
+        (\k -> (sqrt (((toFloat k.pos.x)-x)^2+((toFloat k.pos.y)-y)^2)) > 40)
             kingyos
                   
 relativePos : Pointer.Event -> ( Float, Float )
@@ -249,18 +280,31 @@ view model =
                     ,button [onClick Join] [text "Join"]
                     ]
          Just id -> [h1 [][text (String.fromInt model.points)]
-                    ,div [] ([span [][text
-                                          (String.fromInt (List.length model.players))
-                                     ]
-                             ]++(List.map pointView model.players))
-                    ,Svg.svg [ Attr.width (String.fromInt pondWidth)
+                    ,div [] (List.map pointView model.players)
+                    ,Svg.svg [ Attr.width (String.fromInt (pondWidth+200))
                              , Attr.height (String.fromInt pondHeight)
                              ]
-                         ([Svg.rect [Attr.width "100%"
+                         ([Svg.rect [Attr.width (String.fromInt pondWidth)
                                     ,Attr.height "100%"
                                     ,Attr.fill "skyblue"
                                     ]
                                []
+                          ,animatedG (propagate model.x model.y model.moving)
+                              [] [Svg.circle [Attr.cx "0"
+                                             ,Attr.cy "0"
+                                             ,Attr.r "40"
+                                             ,Attr.fill "none"
+                                             ,Attr.stroke "white"
+                                             ,Attr.strokeWidth  "5"
+                                             ][]
+                                 ,Svg.circle [Attr.cx "0"
+                                             ,Attr.cy "0"
+                                             ,Attr.r "50"
+                                             ,Attr.fill "none"
+                                             ,Attr.stroke "white"
+                                             ,Attr.strokeWidth  "5"
+                                             ][]
+                                 ]
                           ,Svg.circle [Attr.cx (String.fromFloat model.x)
                                       ,Attr.cy (String.fromFloat model.y)
                                       ,Attr.r "50"
@@ -284,7 +328,22 @@ view model =
                                            ,Attr.stroke "black"
                                            ][]
                                  ]
+                              ++ [Svg.rect [Attr.width (String.fromInt pondWidth)
+                                           ,Attr.height "100%"
+                                           ,Attr.fill "none"
+                                           ,Attr.stroke "black"
+                                           ][]
+                                 ]
                               ++(List.map kingyoView model.kingyos)
+                              ++ [Svg.rect [Attr.x (String.fromInt pondWidth)
+                                           ,Attr.y "0"
+                                           ,Attr.width "200"
+                                           ,Attr.height "100%"
+                                           ,Attr.fill "white"
+                                           ,Attr.stroke "black"
+                                           ][]
+                                 ]
+                              ++(List.indexedMap tsukamaetaKingyoView model.tsukamaeta)
                          )
                     ])
 
@@ -377,6 +436,72 @@ kingyoView kingyo =
             ][]
         ]
 
+
+tsukamaetaKingyoView: Int -> Kingyo -> Svg Msg
+tsukamaetaKingyoView hiki kingyo =
+    let
+        vx = kingyo.v.x
+        vy = kingyo.v.y    
+        px = kingyo.pos.x
+        py = kingyo.pos.y
+        transtr = "(" ++ (String.fromInt kingyo.pos.x) ++ 
+                    "," ++ (String.fromInt kingyo.pos.y) ++ ")"
+        theta = String.fromFloat <| 
+                if kingyo.v.x > 0 then
+                    180/pi*(atan ((toFloat vy)/(toFloat vx)))
+                else
+                    180+180/pi*(atan ((toFloat vy)/(toFloat vx)))
+    in
+    animatedG (toOke ((toFloat px), (toFloat py)) hiki)
+    [Attr.transform ("rotate(" ++ theta ++  
+                         "," ++ (String.fromInt px) ++ 
+                         "," ++ (String.fromInt py) ++
+                         ")" ++
+                         "translate" ++ transtr
+                    )
+    ][Svg.path [Attr.d "m 0 20 l 30 -20 l -30 -20 l -60 26 l 0 -12 z"
+                , Attr.fill "red"
+                , Attr.stroke "red"
+              ]
+            []
+        ,Svg.circle [Attr.cx "15"
+                    ,Attr.cy "10"
+                    ,Attr.r "10"
+                    ,Attr.fill "white"
+                ][]
+        ,Svg.circle [Attr.cx "15"
+                    ,Attr.cy "10"
+                    ,Attr.r "8"
+                    ,Attr.fill "black"
+                    ][]
+        ,Svg.circle [Attr.cx "15"
+                    ,Attr.cy "-10"
+                    ,Attr.r "10"
+                    ,Attr.fill "white"
+                    ][]        
+        ,Svg.circle [Attr.cx "15"
+                ,Attr.cy "-10"
+                ,Attr.r "8"
+                ,Attr.fill "black"
+                ][]
+        ,Svg.circle [Attr.cx "18"
+                ,Attr.cy "10"
+                ,Attr.r "2"
+                ,Attr.fill "white"
+                ][]
+        ,Svg.circle [Attr.cx "18"
+                ,Attr.cy "-10"
+                ,Attr.r "2"
+                ,Attr.fill "white"
+                ][]
+        ,Svg.path [Attr.d "m 0 20 l -10 10 l -10 -5 z"
+            , Attr.fill "red"
+            ][]
+        ,Svg.path [Attr.d "m 0 -20 l -10 -10 l -10 5 z"
+            , Attr.fill "red"
+            ][]
+        ]
+        
 -- DETECT ENTER
 
 
@@ -384,3 +509,47 @@ ifIsEnter : msg -> D.Decoder msg
 ifIsEnter msg =
   D.field "key" D.string
     |> D.andThen (\key -> if key == "Enter" then D.succeed msg else D.fail "some other key")
+
+
+animatedG : Animation -> List (Svg.Attribute msg) -> List (Svg msg) -> Svg msg
+animatedG = animatedSvg Svg.g
+
+animatedSvg =
+    Animated.svg
+        { class = Attr.class
+        }
+
+propagate : Float -> Float -> Bool -> Animation
+propagate x y moving =
+    Animation.steps
+        { startAt = [P.x x
+                    ,P.y y
+                    ,P.scale 1
+                    ,P.opacity (if moving then
+                                    0
+                                else
+                                    1
+                               )
+                    ]
+        , options = []
+        }
+        [Animation.step 1000  [P.scale 20
+                              ,P.x x
+                              ,P.y y
+                              ]
+        ,Animation.step 300 [P.opacity 0
+                            ,P.scale 50
+                            ,P.x x
+                            ,P.y y
+                            ]
+        ]
+
+toOke: (Float, Float) -> Int -> Animation
+toOke (x,y) hiki =
+    Animation.fromTo
+        {options = []
+        ,duration = 500
+        }
+    [P.x x, P.y y]
+    [P.x (pondWidth + 100), P.y (100*(toFloat (hiki+1)))]
+    

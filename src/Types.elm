@@ -20,6 +20,7 @@ type alias Player = {name: String
                     ,y: Float
                     ,id: String
                     ,points: Int
+                    ,tsukamaeta: List Kingyo
                     }
 type alias Model =
   { room : String
@@ -32,6 +33,7 @@ type alias Model =
   , points : Int
   , players : List Player
   , kingyos : List Kingyo
+  , tsukamaeta : List Kingyo
   }
 
 type alias Vec2D = {x: Int
