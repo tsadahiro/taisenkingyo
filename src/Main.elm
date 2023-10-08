@@ -104,7 +104,14 @@ update msg model =
           )
       KingyoGenerated newKingyos -> 
           ({model| kingyos = newKingyos++model.kingyos}
-          , Cmd.none)
+          , sendXY {name=model.name
+                   ,x=model.x
+                   ,y=model.y
+                   ,id=Maybe.withDefault "" model.id
+                   ,points=model.points
+                   ,tsukamaeta=model.tsukamaeta
+                   }
+          )
       Tick t -> ({model | kingyos = List.map kingyoStep model.kingyos}
                 , if model.host then
                       sendKingyo model.kingyos
@@ -120,7 +127,7 @@ update msg model =
                          }
                         ,if info.num == 1 then
                              Random.generate
-                                 KingyoGenerated (Random.list 5 randomKingyo)
+                                 KingyoGenerated (Random.list 15 randomKingyo)
                          else
                              Cmd.none
                         )
@@ -174,8 +181,8 @@ update msg model =
                                               else
                                                   tsukamaeta++[kingyo]
                                          ) (List.indexedMap
-                                                (\i k -> {k|pos={x=(pondWidth+100)
-                                                                ,y=((i+1)*100)}
+                                                (\i k -> {k|pos={y=(pondHeight+100)
+                                                                ,x=((i+1)*100)}
                                                          }
                                                 )
                                                 model.tsukamaeta
@@ -194,32 +201,6 @@ update msg model =
                                 Just id -> id
                       }
               )
-              {--
-              if model.host then
-                  ({model | moving = False
-                   , points = model.points + gained
-                   , kingyos = newKingyos
-                   }
-                  ,caught {kingyos = newKingyos
-                          ,points = model.points+gained
-                          ,id = case model.id of
-                                    Nothing -> ""
-                                    Just id -> id
-                          }
-                  )
-              else
-                  ({model | moving = False
-                   , points = model.points + gained
-                   }
-                  , caught {kingyos = newKingyos
-                           ,points = model.points+gained
-                           ,id = case model.id of
-                                     Nothing -> ""
-                                     Just id -> id
-                           }
-                  )
-                  --}
-          
       Move (x,y) ->
               if model.moving then
                   case model.id of
@@ -235,7 +216,7 @@ update msg model =
 sukuu: (Float, Float) -> (List Kingyo) -> (List Kingyo)
 sukuu (x,y) kingyos =
     List.filter
-        (\k -> (sqrt (((toFloat k.pos.x)-x)^2+((toFloat k.pos.y)-y)^2)) > 40)
+        (\k -> (sqrt (((toFloat k.pos.x)-x)^2+((toFloat k.pos.y)-y)^2)) > 60)
             kingyos
                   
 relativePos : Pointer.Event -> ( Float, Float )
@@ -257,99 +238,190 @@ subscriptions _ =
 
 -- VIEW
 
+roomNameInputView: Model -> List (Html Msg)
+roomNameInputView model =
+    [input
+         [ type_ "text"
+         , placeholder "Room"
+         , onInput RoomChanged
+         , on "keydown" (ifIsEnter Join)
+         , value model.room
+         ]
+         []
+    ,input
+         [ type_ "text"
+         , placeholder "Name"
+         , onInput NameChanged
+         , value model.name
+         ]
+         []
+    ,button [onClick Join] [text "Join"]
+    ]
+
+namiView: List (Html Msg)
+namiView = [Svg.circle [Attr.cx "0"
+                                     ,Attr.cy "0"
+                                     ,Attr.r "40"
+                                     ,Attr.fill "none"
+                                     ,Attr.stroke "white"
+                                     ,Attr.strokeWidth  "5"
+                                     ][]
+                         ,Svg.circle [Attr.cx "0"
+                                     ,Attr.cy "0"
+                                     ,Attr.r "50"
+                                     ,Attr.fill "none"
+                                     ,Attr.stroke "white"
+                                     ,Attr.strokeWidth  "5"
+                                     ][]
+                         ,Svg.circle [Attr.cx "0"
+                                     ,Attr.cy "0"
+                                     ,Attr.r "30"
+                                     ,Attr.fill "none"
+                                     ,Attr.stroke "white"
+                                     ,Attr.strokeWidth  "3"
+                                     ][]
+                         ]
+    
+myAmiView: Model -> Html Msg
+myAmiView model = Svg.circle [Attr.cx (String.fromFloat model.x)
+                             ,Attr.cy (String.fromFloat model.y)
+                             ,Attr.r "50"
+                             ,Attr.fill "white"
+                             ,Attr.stroke "black"
+                             ,Attr.fillOpacity (if model.moving then
+                                                    "0.5"
+                                                else
+                                                    "1"
+                                               )
+                             ,Attr.strokeDasharray "5,5"
+                             ,Attr.strokeWidth  "5"
+                             ,Pointer.onDown (relativePos >> Down) 
+                             ,Pointer.onUp (relativePos >> Up)
+                             ,Pointer.onMove (relativePos >> Move) 
+                             ][]
+            
+pondView: Model -> Svg Msg
+pondView model = Svg.svg [ Attr.width (String.fromInt (pondWidth))
+                         , Attr.height (String.fromInt pondHeight)
+                         , Attr.scale "0.5"
+                         ]
+                 ([Svg.rect [Attr.width (String.fromInt pondWidth)
+                            ,Attr.height "100%"
+                            ,Attr.fill "skyblue"
+                            ]
+                       []
+                  ,animatedG (propagate model.x model.y model.moving)
+                      [] namiView
+                  ,myAmiView model
+                  ]++(List.map amiView model.players)
+                      ++ [Svg.rect [Attr.width "100%"
+                                   ,Attr.height "100%"
+                                   ,Attr.fill "none"
+                                   ,Attr.stroke "black"
+                                   ][]
+                              ,Svg.rect [Attr.width (String.fromInt pondWidth)
+                                   ,Attr.height "100%"
+                                   ,Attr.fill "none"
+                                   ,Attr.stroke "black"
+                                   ][]
+                         ]
+                      ++(List.map kingyoView model.kingyos)
+                      ++(List.indexedMap tsukamaetaKingyoView model.tsukamaeta)
+                 )    
+    
+coinsView: Model -> Html Msg
+coinsView model =
+    div [style "font-size" "100px"
+        ]
+        [text <| 
+             List.foldl (\n coinstr -> coinstr++"🪙") ""(List.range 1 model.points)
+        ]
+
+pointsView: Player -> Html Msg
+pointsView player =
+    div [style "font-size" "100px"
+        ]
+        [text <| 
+             List.foldl (\n coinstr -> coinstr++"🪙") ""(List.range 1 player.points)
+        ]
+        
 
 view : Model -> Html Msg
 view model =
-  div []
+  div [align "center"]
     (case model.id of
-         Nothing -> [input
-                         [ type_ "text"
-                         , placeholder "Room"
-                         , onInput RoomChanged
-                         , on "keydown" (ifIsEnter Join)
-                         , value model.room
-                         ]
-                         []
-                    ,input
-                         [ type_ "text"
-                         , placeholder "Name"
-                         , onInput NameChanged
-                         , value model.name
-                         ]
-                         []
-                    ,button [onClick Join] [text "Join"]
-                    ]
-         Just id -> [h1 [][text (String.fromInt model.points)]
-                    ,div [] (List.map pointView model.players)
-                    ,Svg.svg [ Attr.width (String.fromInt (pondWidth+200))
-                             , Attr.height (String.fromInt pondHeight)
+         Nothing -> roomNameInputView model
+         Just id -> [div [] (List.map pointView model.players)
+                    ,div [align "center"]
+                        [div [style "height" "100px"
+                             ,style "width" "800px"
+                             ,style "position" "absolute"
+                             ,style "top" "0"
+                             ,style "left" "100px"
+                             ,style "background" "#fdd"
                              ]
-                         ([Svg.rect [Attr.width (String.fromInt pondWidth)
-                                    ,Attr.height "100%"
-                                    ,Attr.fill "skyblue"
-                                    ]
-                               []
-                          ,animatedG (propagate model.x model.y model.moving)
-                              [] [Svg.circle [Attr.cx "0"
-                                             ,Attr.cy "0"
-                                             ,Attr.r "40"
-                                             ,Attr.fill "none"
-                                             ,Attr.stroke "white"
-                                             ,Attr.strokeWidth  "5"
-                                             ][]
-                                 ,Svg.circle [Attr.cx "0"
-                                             ,Attr.cy "0"
-                                             ,Attr.r "50"
-                                             ,Attr.fill "none"
-                                             ,Attr.stroke "white"
-                                             ,Attr.strokeWidth  "5"
-                                             ][]
-                                 ]
-                          ,Svg.circle [Attr.cx (String.fromFloat model.x)
-                                      ,Attr.cy (String.fromFloat model.y)
-                                      ,Attr.r "50"
-                                      ,Attr.fill "white"
-                                      ,Attr.stroke "black"
-                                      ,Attr.fillOpacity (if model.moving then
-                                                             "0.5"
-                                                         else
-                                                             "1"
-                                                        )
-                                      ,Attr.strokeDasharray "5,5"
-                                      ,Attr.strokeWidth  "5"
-                                      ,Pointer.onDown (relativePos >> Down) 
-                                      ,Pointer.onUp (relativePos >> Up)
-                                      ,Pointer.onMove (relativePos >> Move) 
-                                      ][]
-                          ]++(List.map amiView model.players)
-                              ++ [Svg.rect [Attr.width "100%"
-                                           ,Attr.height "100%"
-                                           ,Attr.fill "none"
-                                           ,Attr.stroke "black"
-                                           ][]
-                                 ]
-                              ++ [Svg.rect [Attr.width (String.fromInt pondWidth)
-                                           ,Attr.height "100%"
-                                           ,Attr.fill "none"
-                                           ,Attr.stroke "black"
-                                           ][]
-                                 ]
-                              ++(List.map kingyoView model.kingyos)
-                              ++ [Svg.rect [Attr.x (String.fromInt pondWidth)
-                                           ,Attr.y "0"
-                                           ,Attr.width "200"
-                                           ,Attr.height "100%"
-                                           ,Attr.fill "white"
-                                           ,Attr.stroke "black"
-                                           ][]
-                                 ]
-                              ++(List.indexedMap tsukamaetaKingyoView model.tsukamaeta)
-                         )
-                    ])
+                             [case (List.head model.players) of
+                                  Nothing -> text ""
+                                  Just player -> text player.name
+                             ,case (List.head model.players) of
+                                  Nothing -> text ""
+                                  Just player ->
+                                      pointsView player
+                             ]
+                        ,div [style "width" "800px"
+                             ,style "height" "100px"
+                             ,style "position" "absolute"
+                             ,style "top" "450px"
+                             ,style "left" "-350px"
+                             ,style "background" "#dfd"
+                             ,style "transform" "rotate(90deg)"
+                             ]
+                             [case (List.head <| List.drop 1 model.players) of
+                                  Nothing -> text ""
+                                  Just player -> text player.name
+                             ,case (List.head <| List.drop 1 model.players) of
+                                  Nothing -> text ""
+                                  Just player ->
+                                      pointsView player
+                             ]
+                        ,div [style "width" "800px"
+                             ,style "height" "800px"
+                             ,style "position" "absolute"
+                             ,style "top" "100px"
+                             ,style "left" "100px"
+                             ]
+                             [pondView model]
+                        ,div [style "width" "800px"
+                             ,style "height" "100px"
+                             ,style "position" "absolute"
+                             ,style "top" "450px"
+                             ,style "left" "550px"
+                             ,style "background" "#ddf"
+                             ,style "transform" "rotate(-90deg)"
+                             ]
+                             [case (List.head <| List.drop 2 model.players) of
+                                  Nothing -> text ""
+                                  Just player -> text player.name
+                             ,case (List.head <| List.drop 2 model.players) of
+                                  Nothing -> text ""
+                                  Just player ->
+                                      pointsView player
+                             ]
+                        ,div [style "width" "800px"
+                             ,style "height" "100px"
+                             ,style "position" "absolute"
+                             ,style "top" "900px"
+                             ,style "left" "100px"
+                             ,style "background" "#ddd"
+                             ]
+                             [coinsView model]
+                        ]
+                    ]
+    )
 
 pointView: Player -> Html Msg
 pointView p =
-    span [][text (p.name++":"++(String.fromInt p.points))
+    span [][text (p.name++":"++(String.fromInt p.points)++"匹　")
          ]
         
 amiView: Player -> Html Msg
@@ -551,5 +623,5 @@ toOke (x,y) hiki =
         ,duration = 500
         }
     [P.x x, P.y y]
-    [P.x (pondWidth + 100), P.y (100*(toFloat (hiki+1)))]
+    [P.x (100*(toFloat (hiki+1))), P.y (pondHeight + 100)]
     

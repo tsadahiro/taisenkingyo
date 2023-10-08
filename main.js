@@ -6374,9 +6374,18 @@ var $author$project$Main$sukuu = F2(
 			$elm$core$List$filter,
 			function (k) {
 				return $elm$core$Basics$sqrt(
-					A2($elm$core$Basics$pow, k.pos.x - x, 2) + A2($elm$core$Basics$pow, k.pos.y - y, 2)) > 40;
+					A2($elm$core$Basics$pow, k.pos.x - x, 2) + A2($elm$core$Basics$pow, k.pos.y - y, 2)) > 60;
 			},
 			kingyos);
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -6403,7 +6412,15 @@ var $author$project$Main$update = F2(
 						{
 							kingyos: _Utils_ap(newKingyos, model.kingyos)
 						}),
-					$elm$core$Platform$Cmd$none);
+					$author$project$Main$sendXY(
+						{
+							id: A2($elm$core$Maybe$withDefault, '', model.id),
+							name: model.name,
+							points: model.points,
+							tsukamaeta: model.tsukamaeta,
+							x: model.x,
+							y: model.y
+						}));
 			case 'Tick':
 				var t = msg.a;
 				return _Utils_Tuple2(
@@ -6429,7 +6446,7 @@ var $author$project$Main$update = F2(
 					(info.num === 1) ? A2(
 						$elm$random$Random$generate,
 						$author$project$Types$KingyoGenerated,
-						A2($elm$random$Random$list, 5, $author$project$Main$randomKingyo)) : $elm$core$Platform$Cmd$none);
+						A2($elm$random$Random$list, 15, $author$project$Main$randomKingyo)) : $elm$core$Platform$Cmd$none);
 			case 'Recv':
 				var info = msg.a;
 				var exist = A2(
@@ -6527,7 +6544,7 @@ var $author$project$Main$update = F2(
 								return _Utils_update(
 									k,
 									{
-										pos: {x: $author$project$Main$pondWidth + 100, y: (i + 1) * 100}
+										pos: {x: (i + 1) * 100, y: $author$project$Main$pondHeight + 100}
 									});
 							}),
 						model.tsukamaeta),
@@ -6573,21 +6590,99 @@ var $author$project$Main$update = F2(
 				}
 		}
 	});
-var $author$project$Types$Down = function (a) {
-	return {$: 'Down', a: a};
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$align = $elm$html$Html$Attributes$stringProperty('align');
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$coinsView = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'font-size', '100px')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				A3(
+					$elm$core$List$foldl,
+					F2(
+						function (n, coinstr) {
+							return coinstr + '🪙';
+						}),
+					'',
+					A2($elm$core$List$range, 1, model.points)))
+			]));
 };
-var $author$project$Types$Join = {$: 'Join'};
-var $author$project$Types$Move = function (a) {
-	return {$: 'Move', a: a};
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
 };
-var $author$project$Types$NameChanged = function (a) {
-	return {$: 'NameChanged', a: a};
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $author$project$Main$pointView = function (p) {
+	return A2(
+		$elm$html$Html$span,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				p.name + (':' + ($elm$core$String$fromInt(p.points) + '匹　')))
+			]));
 };
-var $author$project$Types$RoomChanged = function (a) {
-	return {$: 'RoomChanged', a: a};
-};
-var $author$project$Types$Up = function (a) {
-	return {$: 'Up', a: a};
+var $author$project$Main$pointsView = function (player) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'font-size', '100px')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				A3(
+					$elm$core$List$foldl,
+					F2(
+						function (n, coinstr) {
+							return coinstr + '🪙';
+						}),
+					'',
+					A2($elm$core$List$range, 1, player.points)))
+			]));
 };
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
@@ -6600,8 +6695,6 @@ var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
 var $elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$svg$Svg$text_ = $elm$svg$Svg$trustedNode('text');
 var $elm$svg$Svg$Attributes$x = _VirtualDom_attribute('x');
 var $elm$svg$Svg$Attributes$y = _VirtualDom_attribute('y');
@@ -7050,15 +7143,6 @@ var $elm$core$List$concat = function (lists) {
 	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
 };
 var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$filterMaybes = $elm$core$List$filterMap($elm$core$Basics$identity);
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$getProp = function (f) {
 	return A2(
 		$elm$core$Basics$composeR,
@@ -7144,15 +7228,6 @@ var $andrewMacmurray$elm_simple_animation$Internal$Transform$combine = F2(
 		}
 	});
 var $andrewMacmurray$elm_simple_animation$Internal$Transform$empty = {rotate: $elm$core$Maybe$Nothing, scale: $elm$core$Maybe$Nothing, x: $elm$core$Maybe$Nothing, xy: $elm$core$Maybe$Nothing, y: $elm$core$Maybe$Nothing};
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $andrewMacmurray$elm_simple_animation$Internal$Transform$render_ = function (f) {
 	return A2(
 		$elm$core$Basics$composeR,
@@ -7343,21 +7418,7 @@ var $andrewMacmurray$elm_simple_animation$Simple$Animation$Animated$svg = $andre
 var $author$project$Main$animatedSvg = $andrewMacmurray$elm_simple_animation$Simple$Animation$Animated$svg(
 	{_class: $elm$svg$Svg$Attributes$class});
 var $author$project$Main$animatedG = $author$project$Main$animatedSvg($elm$svg$Svg$g);
-var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$svg$Svg$Attributes$fillOpacity = _VirtualDom_attribute('fill-opacity');
-var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
-var $elm$json$Json$Decode$fail = _Json_fail;
-var $author$project$Main$ifIsEnter = function (msg) {
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		function (key) {
-			return (key === 'Enter') ? $elm$json$Json$Decode$succeed(msg) : $elm$json$Json$Decode$fail('some other key');
-		},
-		A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
-};
-var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$core$Basics$atan = _Basics_atan;
 var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
 var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
@@ -7467,27 +7528,21 @@ var $author$project$Main$kingyoView = function (kingyo) {
 				_List_Nil)
 			]));
 };
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
+var $author$project$Types$Down = function (a) {
+	return {$: 'Down', a: a};
 };
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
+var $author$project$Types$Move = function (a) {
+	return {$: 'Move', a: a};
 };
+var $author$project$Types$Up = function (a) {
+	return {$: 'Up', a: a};
+};
+var $elm$svg$Svg$Attributes$fillOpacity = _VirtualDom_attribute('fill-opacity');
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$defaultOptions = {preventDefault: true, stopPropagation: false};
 var $elm$virtual_dom$VirtualDom$Custom = function (a) {
 	return {$: 'Custom', a: a};
 };
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm$html$Html$Events$custom = F2(
 	function (event, decoder) {
 		return A2(
@@ -7628,58 +7683,76 @@ var $mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onWithOptions = F3(
 				$mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$eventDecoder));
 	});
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onDown = A2($mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onWithOptions, 'pointerdown', $mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$defaultOptions);
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onMove = A2($mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onWithOptions, 'pointermove', $mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$defaultOptions);
 var $mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onUp = A2($mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onWithOptions, 'pointerup', $mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$defaultOptions);
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
-var $elm$html$Html$span = _VirtualDom_node('span');
-var $author$project$Main$pointView = function (p) {
+var $author$project$Main$relativePos = function (event) {
+	return event.pointer.offsetPos;
+};
+var $elm$svg$Svg$Attributes$strokeDasharray = _VirtualDom_attribute('stroke-dasharray');
+var $author$project$Main$myAmiView = function (model) {
 	return A2(
-		$elm$html$Html$span,
-		_List_Nil,
+		$elm$svg$Svg$circle,
 		_List_fromArray(
 			[
-				$elm$html$Html$text(
-				p.name + (':' + $elm$core$String$fromInt(p.points)))
-			]));
+				$elm$svg$Svg$Attributes$cx(
+				$elm$core$String$fromFloat(model.x)),
+				$elm$svg$Svg$Attributes$cy(
+				$elm$core$String$fromFloat(model.y)),
+				$elm$svg$Svg$Attributes$r('50'),
+				$elm$svg$Svg$Attributes$fill('white'),
+				$elm$svg$Svg$Attributes$stroke('black'),
+				$elm$svg$Svg$Attributes$fillOpacity(
+				model.moving ? '0.5' : '1'),
+				$elm$svg$Svg$Attributes$strokeDasharray('5,5'),
+				$elm$svg$Svg$Attributes$strokeWidth('5'),
+				$mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onDown(
+				A2($elm$core$Basics$composeR, $author$project$Main$relativePos, $author$project$Types$Down)),
+				$mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onUp(
+				A2($elm$core$Basics$composeR, $author$project$Main$relativePos, $author$project$Types$Up)),
+				$mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onMove(
+				A2($elm$core$Basics$composeR, $author$project$Main$relativePos, $author$project$Types$Move))
+			]),
+		_List_Nil);
 };
+var $author$project$Main$namiView = _List_fromArray(
+	[
+		A2(
+		$elm$svg$Svg$circle,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$cx('0'),
+				$elm$svg$Svg$Attributes$cy('0'),
+				$elm$svg$Svg$Attributes$r('40'),
+				$elm$svg$Svg$Attributes$fill('none'),
+				$elm$svg$Svg$Attributes$stroke('white'),
+				$elm$svg$Svg$Attributes$strokeWidth('5')
+			]),
+		_List_Nil),
+		A2(
+		$elm$svg$Svg$circle,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$cx('0'),
+				$elm$svg$Svg$Attributes$cy('0'),
+				$elm$svg$Svg$Attributes$r('50'),
+				$elm$svg$Svg$Attributes$fill('none'),
+				$elm$svg$Svg$Attributes$stroke('white'),
+				$elm$svg$Svg$Attributes$strokeWidth('5')
+			]),
+		_List_Nil),
+		A2(
+		$elm$svg$Svg$circle,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$cx('0'),
+				$elm$svg$Svg$Attributes$cy('0'),
+				$elm$svg$Svg$Attributes$r('30'),
+				$elm$svg$Svg$Attributes$fill('none'),
+				$elm$svg$Svg$Attributes$stroke('white'),
+				$elm$svg$Svg$Attributes$strokeWidth('3')
+			]),
+		_List_Nil)
+	]);
 var $andrewMacmurray$elm_simple_animation$Internal$Animation$Property$Opacity = function (a) {
 	return {$: 'Opacity', a: a};
 };
@@ -7867,10 +7940,7 @@ var $author$project$Main$propagate = F3(
 				]));
 	});
 var $elm$svg$Svg$rect = $elm$svg$Svg$trustedNode('rect');
-var $author$project$Main$relativePos = function (event) {
-	return event.pointer.offsetPos;
-};
-var $elm$svg$Svg$Attributes$strokeDasharray = _VirtualDom_attribute('stroke-dasharray');
+var $elm$svg$Svg$Attributes$scale = _VirtualDom_attribute('scale');
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
 var $andrewMacmurray$elm_simple_animation$Simple$Animation$fromTo = F3(
 	function (o, from_, to_) {
@@ -7899,8 +7969,8 @@ var $author$project$Main$toOke = F2(
 				]),
 			_List_fromArray(
 				[
-					$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$x($author$project$Main$pondWidth + 100),
-					$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$y(100 * (hiki + 1))
+					$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$x(100 * (hiki + 1)),
+					$andrewMacmurray$elm_simple_animation$Simple$Animation$Property$y($author$project$Main$pondHeight + 100)
 				]));
 	});
 var $author$project$Main$tsukamaetaKingyoView = F2(
@@ -8012,197 +8082,335 @@ var $author$project$Main$tsukamaetaKingyoView = F2(
 					_List_Nil)
 				]));
 	});
+var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
+var $author$project$Main$pondView = function (model) {
+	return A2(
+		$elm$svg$Svg$svg,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$width(
+				$elm$core$String$fromInt($author$project$Main$pondWidth)),
+				$elm$svg$Svg$Attributes$height(
+				$elm$core$String$fromInt($author$project$Main$pondHeight)),
+				$elm$svg$Svg$Attributes$scale('0.5')
+			]),
+		_Utils_ap(
+			_List_fromArray(
+				[
+					A2(
+					$elm$svg$Svg$rect,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$width(
+							$elm$core$String$fromInt($author$project$Main$pondWidth)),
+							$elm$svg$Svg$Attributes$height('100%'),
+							$elm$svg$Svg$Attributes$fill('skyblue')
+						]),
+					_List_Nil),
+					A3(
+					$author$project$Main$animatedG,
+					A3($author$project$Main$propagate, model.x, model.y, model.moving),
+					_List_Nil,
+					$author$project$Main$namiView),
+					$author$project$Main$myAmiView(model)
+				]),
+			_Utils_ap(
+				A2($elm$core$List$map, $author$project$Main$amiView, model.players),
+				_Utils_ap(
+					_List_fromArray(
+						[
+							A2(
+							$elm$svg$Svg$rect,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$width('100%'),
+									$elm$svg$Svg$Attributes$height('100%'),
+									$elm$svg$Svg$Attributes$fill('none'),
+									$elm$svg$Svg$Attributes$stroke('black')
+								]),
+							_List_Nil),
+							A2(
+							$elm$svg$Svg$rect,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$width(
+									$elm$core$String$fromInt($author$project$Main$pondWidth)),
+									$elm$svg$Svg$Attributes$height('100%'),
+									$elm$svg$Svg$Attributes$fill('none'),
+									$elm$svg$Svg$Attributes$stroke('black')
+								]),
+							_List_Nil)
+						]),
+					_Utils_ap(
+						A2($elm$core$List$map, $author$project$Main$kingyoView, model.kingyos),
+						A2($elm$core$List$indexedMap, $author$project$Main$tsukamaetaKingyoView, model.tsukamaeta))))));
+};
+var $author$project$Types$Join = {$: 'Join'};
+var $author$project$Types$NameChanged = function (a) {
+	return {$: 'NameChanged', a: a};
+};
+var $author$project$Types$RoomChanged = function (a) {
+	return {$: 'RoomChanged', a: a};
+};
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $author$project$Main$ifIsEnter = function (msg) {
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		function (key) {
+			return (key === 'Enter') ? $elm$json$Json$Decode$succeed(msg) : $elm$json$Json$Decode$fail('some other key');
+		},
+		A2($elm$json$Json$Decode$field, 'key', $elm$json$Json$Decode$string));
+};
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
+var $author$project$Main$roomNameInputView = function (model) {
+	return _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$input,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$type_('text'),
+					$elm$html$Html$Attributes$placeholder('Room'),
+					$elm$html$Html$Events$onInput($author$project$Types$RoomChanged),
+					A2(
+					$elm$html$Html$Events$on,
+					'keydown',
+					$author$project$Main$ifIsEnter($author$project$Types$Join)),
+					$elm$html$Html$Attributes$value(model.room)
+				]),
+			_List_Nil),
+			A2(
+			$elm$html$Html$input,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$type_('text'),
+					$elm$html$Html$Attributes$placeholder('Name'),
+					$elm$html$Html$Events$onInput($author$project$Types$NameChanged),
+					$elm$html$Html$Attributes$value(model.name)
+				]),
+			_List_Nil),
+			A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Events$onClick($author$project$Types$Join)
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Join')
+				]))
+		]);
+};
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$align('center')
+			]),
 		function () {
 			var _v0 = model.id;
 			if (_v0.$ === 'Nothing') {
-				return _List_fromArray(
-					[
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$placeholder('Room'),
-								$elm$html$Html$Events$onInput($author$project$Types$RoomChanged),
-								A2(
-								$elm$html$Html$Events$on,
-								'keydown',
-								$author$project$Main$ifIsEnter($author$project$Types$Join)),
-								$elm$html$Html$Attributes$value(model.room)
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('text'),
-								$elm$html$Html$Attributes$placeholder('Name'),
-								$elm$html$Html$Events$onInput($author$project$Types$NameChanged),
-								$elm$html$Html$Attributes$value(model.name)
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick($author$project$Types$Join)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Join')
-							]))
-					]);
+				return $author$project$Main$roomNameInputView(model);
 			} else {
 				var id = _v0.a;
 				return _List_fromArray(
 					[
 						A2(
-						$elm$html$Html$h1,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								$elm$core$String$fromInt(model.points))
-							])),
-						A2(
 						$elm$html$Html$div,
 						_List_Nil,
 						A2($elm$core$List$map, $author$project$Main$pointView, model.players)),
 						A2(
-						$elm$svg$Svg$svg,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$svg$Svg$Attributes$width(
-								$elm$core$String$fromInt($author$project$Main$pondWidth + 200)),
-								$elm$svg$Svg$Attributes$height(
-								$elm$core$String$fromInt($author$project$Main$pondHeight))
+								$elm$html$Html$Attributes$align('center')
 							]),
-						_Utils_ap(
-							_List_fromArray(
-								[
-									A2(
-									$elm$svg$Svg$rect,
-									_List_fromArray(
-										[
-											$elm$svg$Svg$Attributes$width(
-											$elm$core$String$fromInt($author$project$Main$pondWidth)),
-											$elm$svg$Svg$Attributes$height('100%'),
-											$elm$svg$Svg$Attributes$fill('skyblue')
-										]),
-									_List_Nil),
-									A3(
-									$author$project$Main$animatedG,
-									A3($author$project$Main$propagate, model.x, model.y, model.moving),
-									_List_Nil,
-									_List_fromArray(
-										[
-											A2(
-											$elm$svg$Svg$circle,
-											_List_fromArray(
-												[
-													$elm$svg$Svg$Attributes$cx('0'),
-													$elm$svg$Svg$Attributes$cy('0'),
-													$elm$svg$Svg$Attributes$r('40'),
-													$elm$svg$Svg$Attributes$fill('none'),
-													$elm$svg$Svg$Attributes$stroke('white'),
-													$elm$svg$Svg$Attributes$strokeWidth('5')
-												]),
-											_List_Nil),
-											A2(
-											$elm$svg$Svg$circle,
-											_List_fromArray(
-												[
-													$elm$svg$Svg$Attributes$cx('0'),
-													$elm$svg$Svg$Attributes$cy('0'),
-													$elm$svg$Svg$Attributes$r('50'),
-													$elm$svg$Svg$Attributes$fill('none'),
-													$elm$svg$Svg$Attributes$stroke('white'),
-													$elm$svg$Svg$Attributes$strokeWidth('5')
-												]),
-											_List_Nil)
-										])),
-									A2(
-									$elm$svg$Svg$circle,
-									_List_fromArray(
-										[
-											$elm$svg$Svg$Attributes$cx(
-											$elm$core$String$fromFloat(model.x)),
-											$elm$svg$Svg$Attributes$cy(
-											$elm$core$String$fromFloat(model.y)),
-											$elm$svg$Svg$Attributes$r('50'),
-											$elm$svg$Svg$Attributes$fill('white'),
-											$elm$svg$Svg$Attributes$stroke('black'),
-											$elm$svg$Svg$Attributes$fillOpacity(
-											model.moving ? '0.5' : '1'),
-											$elm$svg$Svg$Attributes$strokeDasharray('5,5'),
-											$elm$svg$Svg$Attributes$strokeWidth('5'),
-											$mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onDown(
-											A2($elm$core$Basics$composeR, $author$project$Main$relativePos, $author$project$Types$Down)),
-											$mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onUp(
-											A2($elm$core$Basics$composeR, $author$project$Main$relativePos, $author$project$Types$Up)),
-											$mpizenberg$elm_pointer_events$Html$Events$Extra$Pointer$onMove(
-											A2($elm$core$Basics$composeR, $author$project$Main$relativePos, $author$project$Types$Move))
-										]),
-									_List_Nil)
-								]),
-							_Utils_ap(
-								A2($elm$core$List$map, $author$project$Main$amiView, model.players),
-								_Utils_ap(
-									_List_fromArray(
-										[
-											A2(
-											$elm$svg$Svg$rect,
-											_List_fromArray(
-												[
-													$elm$svg$Svg$Attributes$width('100%'),
-													$elm$svg$Svg$Attributes$height('100%'),
-													$elm$svg$Svg$Attributes$fill('none'),
-													$elm$svg$Svg$Attributes$stroke('black')
-												]),
-											_List_Nil)
-										]),
-									_Utils_ap(
-										_List_fromArray(
-											[
-												A2(
-												$elm$svg$Svg$rect,
-												_List_fromArray(
-													[
-														$elm$svg$Svg$Attributes$width(
-														$elm$core$String$fromInt($author$project$Main$pondWidth)),
-														$elm$svg$Svg$Attributes$height('100%'),
-														$elm$svg$Svg$Attributes$fill('none'),
-														$elm$svg$Svg$Attributes$stroke('black')
-													]),
-												_List_Nil)
-											]),
-										_Utils_ap(
-											A2($elm$core$List$map, $author$project$Main$kingyoView, model.kingyos),
-											_Utils_ap(
-												_List_fromArray(
-													[
-														A2(
-														$elm$svg$Svg$rect,
-														_List_fromArray(
-															[
-																$elm$svg$Svg$Attributes$x(
-																$elm$core$String$fromInt($author$project$Main$pondWidth)),
-																$elm$svg$Svg$Attributes$y('0'),
-																$elm$svg$Svg$Attributes$width('200'),
-																$elm$svg$Svg$Attributes$height('100%'),
-																$elm$svg$Svg$Attributes$fill('white'),
-																$elm$svg$Svg$Attributes$stroke('black')
-															]),
-														_List_Nil)
-													]),
-												A2($elm$core$List$indexedMap, $author$project$Main$tsukamaetaKingyoView, model.tsukamaeta))))))))
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'height', '100px'),
+										A2($elm$html$Html$Attributes$style, 'width', '800px'),
+										A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
+										A2($elm$html$Html$Attributes$style, 'top', '0'),
+										A2($elm$html$Html$Attributes$style, 'left', '100px'),
+										A2($elm$html$Html$Attributes$style, 'background', '#fdd')
+									]),
+								_List_fromArray(
+									[
+										function () {
+										var _v1 = $elm$core$List$head(model.players);
+										if (_v1.$ === 'Nothing') {
+											return $elm$html$Html$text('');
+										} else {
+											var player = _v1.a;
+											return $elm$html$Html$text(player.name);
+										}
+									}(),
+										function () {
+										var _v2 = $elm$core$List$head(model.players);
+										if (_v2.$ === 'Nothing') {
+											return $elm$html$Html$text('');
+										} else {
+											var player = _v2.a;
+											return $author$project$Main$pointsView(player);
+										}
+									}()
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'width', '800px'),
+										A2($elm$html$Html$Attributes$style, 'height', '100px'),
+										A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
+										A2($elm$html$Html$Attributes$style, 'top', '450px'),
+										A2($elm$html$Html$Attributes$style, 'left', '-350px'),
+										A2($elm$html$Html$Attributes$style, 'background', '#dfd'),
+										A2($elm$html$Html$Attributes$style, 'transform', 'rotate(90deg)')
+									]),
+								_List_fromArray(
+									[
+										function () {
+										var _v3 = $elm$core$List$head(
+											A2($elm$core$List$drop, 1, model.players));
+										if (_v3.$ === 'Nothing') {
+											return $elm$html$Html$text('');
+										} else {
+											var player = _v3.a;
+											return $elm$html$Html$text(player.name);
+										}
+									}(),
+										function () {
+										var _v4 = $elm$core$List$head(
+											A2($elm$core$List$drop, 1, model.players));
+										if (_v4.$ === 'Nothing') {
+											return $elm$html$Html$text('');
+										} else {
+											var player = _v4.a;
+											return $author$project$Main$pointsView(player);
+										}
+									}()
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'width', '800px'),
+										A2($elm$html$Html$Attributes$style, 'height', '800px'),
+										A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
+										A2($elm$html$Html$Attributes$style, 'top', '100px'),
+										A2($elm$html$Html$Attributes$style, 'left', '100px')
+									]),
+								_List_fromArray(
+									[
+										$author$project$Main$pondView(model)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'width', '800px'),
+										A2($elm$html$Html$Attributes$style, 'height', '100px'),
+										A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
+										A2($elm$html$Html$Attributes$style, 'top', '450px'),
+										A2($elm$html$Html$Attributes$style, 'left', '550px'),
+										A2($elm$html$Html$Attributes$style, 'background', '#ddf'),
+										A2($elm$html$Html$Attributes$style, 'transform', 'rotate(-90deg)')
+									]),
+								_List_fromArray(
+									[
+										function () {
+										var _v5 = $elm$core$List$head(
+											A2($elm$core$List$drop, 2, model.players));
+										if (_v5.$ === 'Nothing') {
+											return $elm$html$Html$text('');
+										} else {
+											var player = _v5.a;
+											return $elm$html$Html$text(player.name);
+										}
+									}(),
+										function () {
+										var _v6 = $elm$core$List$head(
+											A2($elm$core$List$drop, 2, model.players));
+										if (_v6.$ === 'Nothing') {
+											return $elm$html$Html$text('');
+										} else {
+											var player = _v6.a;
+											return $author$project$Main$pointsView(player);
+										}
+									}()
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'width', '800px'),
+										A2($elm$html$Html$Attributes$style, 'height', '100px'),
+										A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
+										A2($elm$html$Html$Attributes$style, 'top', '900px'),
+										A2($elm$html$Html$Attributes$style, 'left', '100px'),
+										A2($elm$html$Html$Attributes$style, 'background', '#ddd')
+									]),
+								_List_fromArray(
+									[
+										$author$project$Main$coinsView(model)
+									]))
+							]))
 					]);
 			}
 		}());
