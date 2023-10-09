@@ -6608,7 +6608,7 @@ var $author$project$Main$coinsView = function (model) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				A2($elm$html$Html$Attributes$style, 'font-size', '100px')
+				A2($elm$html$Html$Attributes$style, 'font-size', '60px')
 			]),
 		_List_fromArray(
 			[
