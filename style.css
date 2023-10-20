@@ -1,0 +1,24 @@
+#playervideo2{
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    top: 0px;
+    left: 100px;
+    background: #fff;
+}
+#playervideo3{
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    top: 100px;
+    left: 0px;
+    background: #fff;
+}
+#playervideo4{
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    top: 100px;
+    left: 900px;
+    background: #fff;
+}

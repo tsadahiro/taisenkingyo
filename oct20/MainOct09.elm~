@@ -1,4 +1,4 @@
-port module Main exposing (..)
+port module MainOct09 exposing (..)
 
 import Browser
 import Html exposing (..)
@@ -359,13 +359,12 @@ view model =
                              ,style "top" "0"
                              ,style "left" "100px"
                              ,style "background" "#fdd"
+                             ,Html.Attributes.id "player2"
                              ]
                              (case (List.head model.players) of
                                   Nothing -> []
-                                  Just player ->
-                                      [text player.name
-                                      , pointsView player
-                                      ]
+                                  Just player -> [text player.name]
+                                                  ++[ pointsView player]
                              )
                         ,div [style "width" "800px"
                              ,style "height" "100px"
@@ -413,25 +412,16 @@ view model =
                              ,style "left" "100px"
                              ,style "background" "#ddd"
                              ]
-                             [coinsView model
+                             [coinsView model]
+                        ,video[style "width" "100px"
+                            ,style "height" "100px"
+                            ,style "position" "absolute"
+                            ,style "top" "900px"
+                            ,style "left" "100px"
+                            ,style "background" "#fff"
+                            ,Html.Attributes.id "player1"
                              ]
-                             , div [style "background" "white"
-                                   ,style "width" "100px"
-                                   ,style "height" "100px"
-                                   ,style "position" "absolute"
-                                   ,style "left" "100px"
-                                   ,style "top" "900px"
-                                   ]
-                                  [text "p1"
-                                  ,Svg.svg [Attr.width "100"
-                                           ,Attr.height "100"
-                                           ]
-                                       [Svg.circle [Attr.cx "0"
-                                                   ,Attr.cy "0"
-                                                   ,Attr.r "30"
-                                                   ][]
-                                       ]
-                                  ]
+                             [text "player1"]
                         ]
                     ]
     )

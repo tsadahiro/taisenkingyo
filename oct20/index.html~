@@ -5,16 +5,11 @@
   <meta charset="UTF-8">
   <title>金魚すくい</title>
   <script src="https://cdn.jsdelivr.net/npm/@skyway-sdk/room/dist/skyway_room-latest.js"></script>
-  <link href="style.css" rel="stylesheet"></link>
 </head>
 
 
 <body>
   <div id="myapp"></div>
-  <div id="playervideo2">  </div>
-  <div id="playervideo3">  </div>
-  <div id="playervideo4">  </div>
-
   <script type="text/javascript" src="main.js?"></script>
   <script src="ports.js"></script>
 </body>
