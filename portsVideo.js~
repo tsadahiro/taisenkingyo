@@ -93,7 +93,7 @@ const token = new SkyWayAuthToken({
 	const me = await channel.join();
 
 	app.ports.skywayId.send({id:me.id,num:channel.members.length});
-	//console.log(channel.members.length);
+	console.log(channel.members.length);
 	await me.publish(data);
 	await me.publish(video);
 	const localVideo = document.getElementById('player1');
@@ -133,7 +133,7 @@ const token = new SkyWayAuthToken({
 			app.ports.kingyoInfo.send(newdata.kingyos);
 		    }
 		    else if (newdata.class == "caught"){
-			//console.log(newdata);
+			console.log(newdata);
 			app.ports.kingyoCaught.send(
 			    {kingyos:newdata.kingyos,
 			     id:newdata.id,
